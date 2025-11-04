@@ -46,6 +46,7 @@ def build_wheel(wheel_directory, config_settings = None, metadata_directory = No
         "-Lsdl/build"
     ] if sys.platform == "darwin" else ["-Lsdl/build"]
 
+    print("IJFBSIFB")
     print("HELLOOO", os.name, sys.platform)
 
     if os.name == "posix":
