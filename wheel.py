@@ -50,31 +50,16 @@ def build_wheel(wheel_directory, config_settings = None, metadata_directory = No
         extra = ["-Lsdl/build"]
 
         if shutil.which("apk"):
-            subprocess.run([
-                "apk", "add", "--no-cache",
-                "libasound2-dev", "libpulse-dev", "libaudio-dev", "libfribidi-dev",
-                "libjack-dev", "libsndio-dev", "libx11-dev", "libxext-dev",
-                "libxrandr-dev", "libxcursor-dev", "libxfixes-dev", "libxi-dev",
-                "libxss-dev", "libxtst-dev", "libxkbcommon-dev", "libdrm-dev",
-                "libgbm-dev", "libgl1-mesa-dev", "libgles2-mesa-dev",
-                "libegl1-mesa-dev", "libdbus-1-dev", "libibus-1.0-dev", "libudev-dev"])
+            subprocess.run(["apk", "add", "--no-cache", "libxi-dev", "wayland-dev", "wayland-protocols", "mesa-dev", "libdrm-dev"])
 
         elif shutil.which("dnf"):
-            subprocess.run([
-                "dnf", "install", "-y",
-                "alsa-lib-devel", "fribidi-devel", "pulseaudio-libs-devel",
-                "pipewire-devel", "libX11-devel", "libXext-devel", "libXrandr-devel",
-                "libXcursor-devel", "libXfixes-devel", "libXi-devel", "libXScrnSaver-devel",
-                "dbus-devel", "ibus-devel", "systemd-devel", "mesa-libGL-devel",
-                "libxkbcommon-devel", "mesa-libGLES-devel", "mesa-libEGL-devel",
-                "vulkan-devel", "wayland-devel", "wayland-protocols-devel",
-                "libdrm-devel", "mesa-libgbm-devel", "libusb1-devel", "libdecor-devel",
-                "pipewire-jack-audio-connection-kit-devel"])
+            subprocess.run(["dnf", "install", "-y", "libXi-devel", "wayland-devel", "wayland-protocols-devel", "mesa-libEGL-devel"])
 
     if not pathlib.Path("sdl/build").exists():
         subprocess.run([
             "cmake", "-S", "sdl", "-B", "sdl/build",
             "-DBUILD_SHARED_LIBS=OFF",
+            "-DSDL_SHARED=OFF"
             "-DCMAKE_OSX_ARCHITECTURES=x86_64;arm64",
             "-DCMAKE_OSX_DEPLOYMENT_TARGET=10.13",
             "-DSDL_AUDIO=OFF",
@@ -84,7 +69,13 @@ def build_wheel(wheel_directory, config_settings = None, metadata_directory = No
             "-DSDL_HIDAPI=OFF",
             "-DSDL_POWER=OFF",
             "-DSDL_SENSOR=OFF",
-            "-DSDL_DIALOG=OFF"
+            "-DSDL_DIALOG=OFF",
+            "-DSDL_X11_XCURSOR=OFF",
+            "-DSDL_X11_XINERAMA=OFF",
+            "-DSDL_X11_XRANDR=OFF",
+            "-DSDL_X11_XSS=OFF",
+            "-DSDL_X11_XVIDMODE=OFF",
+            "-DSDL_X11_XTEST=OFF"
         ])
 
         subprocess.run(["cmake", "--build", "sdl/build", "--config", "Release"])
