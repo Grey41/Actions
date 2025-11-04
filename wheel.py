@@ -52,14 +52,13 @@ def build_wheel(wheel_directory, config_settings = None, metadata_directory = No
     if os.name == "posix":
         packages = [ "libxcursor-dev", "libxi-dev", "libxinerama-dev", "libxrandr-dev"]
 
-        print("AAA", shutil.which("apk"), shutil.which("apt-get"))
+        print("AAA", shutil.which("apk"), shutil.which("dnf"))
 
         if shutil.which("apk"):
             subprocess.run(["apk", "add", "--no-cache", *packages])
 
-        elif shutil.which("apt-get"):
-            subprocess.run(["apt-get", "update", "-y"])
-            subprocess.run(["apt-get", "install", "-y", *packages])
+        elif shutil.which("dnf"):
+            subprocess.run(["dnf", "install", "-y", *packages])
 
     if not pathlib.Path("sdl/build").exists():
         subprocess.run([
