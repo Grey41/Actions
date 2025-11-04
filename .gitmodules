@@ -1,0 +1,9 @@
+[submodule "stb"]
+	path = stb
+	url = https://github.com/nothings/stb.git
+[submodule "sdl"]
+	path = sdl
+	url = https://github.com/libsdl-org/SDL.git
+[submodule "libtess2"]
+	path = libtess2
+	url = https://github.com/memononen/libtess2.git
