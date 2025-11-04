@@ -46,6 +46,8 @@ def build_wheel(wheel_directory, config_settings = None, metadata_directory = No
         "-Lsdl/build"
     ] if sys.platform == "darwin" else ["-Lsdl/build"]
 
+    print("HELLOOO", os.name, sys.platform)
+
     if os.name == "posix":
         packages = [ "libxcursor-dev", "libxi-dev", "libxinerama-dev", "libxrandr-dev"]
 
