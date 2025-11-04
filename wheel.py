@@ -44,21 +44,16 @@ def build_wheel(wheel_directory, config_settings = None, metadata_directory = No
         "-framework", "AppKit",
         "-g0", "-Wstrict-prototypes",
         "-Lsdl/build"
-    ] if sys.platform == "darwin" else ["-Lsdl/build"]
+    ]
 
-    print("IJFBSIFB")
-    print("HELLOOO", os.name, sys.platform)
-
-    if os.name == "posix":
-        packages = [ "libxcursor-dev", "libxi-dev", "libxinerama-dev", "libxrandr-dev"]
-
-        print("AAA", shutil.which("apk"), shutil.which("dnf"))
+    if sys.platform == "linux":
+        extra = ["-Lsdl/build"]
 
         if shutil.which("apk"):
-            subprocess.run(["apk", "add", "--no-cache", *packages])
+            subprocess.run(["apk", "add", "--no-cache", "libxcursor-dev", "libxi-dev", "libxinerama-dev", "libxrandr-dev"])
 
         elif shutil.which("dnf"):
-            subprocess.run(["dnf", "install", "-y", *packages])
+            subprocess.run(["dnf", "install", "-y", "libXcursor-devel", "libXi-devel", "libXinerama-devel", "libXrandr-devel"])
 
     if not pathlib.Path("sdl/build").exists():
         subprocess.run([
