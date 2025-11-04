@@ -1,4 +1,4 @@
-import subprocess, sysconfig, pathlib, sys, zipfile, hashlib, base64
+import subprocess, sysconfig, pathlib, sys, zipfile, hashlib, base64, shutil
 
 VERSION = "3.1"
 
@@ -44,9 +44,18 @@ def build_wheel(wheel_directory, config_settings = None, metadata_directory = No
         "-framework", "AppKit",
         "-g0", "-Wstrict-prototypes",
         "-Lsdl/build"
-    ] if sys.platform == "darwin" else [
-        "-Lsdl/build"
     ]
+
+    if sys.platform == "linux":
+        extra = ["-Lsdl/build"]
+        packages = [ "libxcursor-dev", "libxi-dev", "libxinerama-dev", "libxrandr-dev"]
+
+        if shutil.which("apk"):
+            subprocess.run(["apk", "add", "--no-cache", *packages])
+
+        elif shutil.which("apt-get"):
+            subprocess.run(["apt-get", "update", "-y"])
+            subprocess.run(["apt-get", "install", "-y", *packages])
 
     if not pathlib.Path("sdl/build").exists():
         subprocess.run([
@@ -100,3 +109,10 @@ def build_wheel(wheel_directory, config_settings = None, metadata_directory = No
     file.writestr(f"JoBase-{VERSION}.dist-info/RECORD", "\n".join(lines))
 
     return wheel
+
+# sudo apt-get install build-essential git make \
+# pkg-config cmake ninja-build gnome-desktop-testing libasound2-dev libpulse-dev \
+# libaudio-dev libfribidi-dev libjack-dev libsndio-dev libx11-dev libxext-dev \
+# libxrandr-dev libxcursor-dev libxfixes-dev libxi-dev libxss-dev libxtst-dev \
+# libxkbcommon-dev libdrm-dev libgbm-dev libgl1-mesa-dev libgles2-mesa-dev \
+# libegl1-mesa-dev libdbus-1-dev libibus-1.0-dev libudev-dev
