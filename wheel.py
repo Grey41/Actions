@@ -1,4 +1,4 @@
-import subprocess, sysconfig, pathlib, sys, zipfile, hashlib, base64, shutil
+import subprocess, sysconfig, pathlib, sys, zipfile, hashlib, base64, shutil, os
 
 VERSION = "3.1"
 
@@ -26,8 +26,8 @@ def build_wheel(wheel_directory, config_settings = None, metadata_directory = No
         code = base64.urlsafe_b64encode(hash.digest()).rstrip(b"=").decode("ascii")
         lines.append(f"{path},sha256={code},{len(bytes)}")
 
-    build, flags, include, ext, ver, abi = sysconfig.get_config_vars("BLDSHARED", "OPT", "INCLUDEPY", "EXT_SUFFIX", "py_version_nodot", "abiflags")
-    tag = f"cp{ver}-cp{ver}{abi}-{sysconfig.get_platform().replace("-", "_").replace(".", "_")}"
+    build, flags, include, ext, ver = sysconfig.get_config_vars("BLDSHARED", "OPT", "INCLUDEPY", "EXT_SUFFIX", "py_version_nodot")
+    tag = f"cp{ver}-cp{ver}{sys.abiflags}-{sysconfig.get_platform().replace("-", "_").replace(".", "_")}"
     wheel = f"JoBase-{VERSION}-{tag}.whl"
     file = zipfile.ZipFile(pathlib.Path(wheel_directory) / wheel, "w")
     out = "__init__" + ext
@@ -44,10 +44,9 @@ def build_wheel(wheel_directory, config_settings = None, metadata_directory = No
         "-framework", "AppKit",
         "-g0", "-Wstrict-prototypes",
         "-Lsdl/build"
-    ]
+    ] if sys.platform == "darwin" else ["-Lsdl/build"]
 
-    if sys.platform == "linux":
-        extra = ["-Lsdl/build"]
+    if os.name == "posix":
         packages = [ "libxcursor-dev", "libxi-dev", "libxinerama-dev", "libxrandr-dev"]
 
         print("AAA", shutil.which("apk"), shutil.which("apt-get"))
