@@ -1,0 +1,44 @@
+name: JoBase Wheels
+
+on:
+  workflow_dispatch:
+    inputs:
+      upload:
+        description: Upload to PyPI
+        required: true
+        type: boolean
+
+jobs:
+  linux:
+    name: Linux ${{matrix.arch[0]}}
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        arch:
+          - [x86_64, manylinux_2_34_x86_64]
+          # - [i686, manylinux_2_34_i686]
+          # - [ppc64le]
+          # - [s390x]
+          # - [aarch64]
+          # - [riscv64]
+          # - [Musl x86_64]
+          # - [Musl i686]
+          # - [Musl aarch64]
+          # - [Musl ppc64le]
+          # - [Musl s390x]
+          # - [Musl armv7l]
+          # - [Musl riscv64]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Create container
+        run: docker create --name build -v ${{github.workspace}}:/src -w /src quay.io/pypa/${{matrix.arch[1]}}
+
+      - name: Start container
+        run: docker start ${{matrix.arch[1]}}
+
+      - name: Build libraries
+        run: docker exec build ls
