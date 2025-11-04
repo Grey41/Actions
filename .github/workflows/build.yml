@@ -40,5 +40,15 @@ jobs:
       - name: Start container
         run: docker start build
 
-      - name: Build libraries
-        run: docker exec build ls
+      - name: Build wheels
+        run: |
+          for py in cp313-cp313 cp313-cp313t cp314-cp314 cp314-cp314t; do
+            docker exec build /opt/python/$py/bin/python -m build --wheel
+          done
+
+      - name: Test
+        run: docker exec build ls dist
+
+      - name: Remove container
+        if: always()
+        run: docker rm -f build
