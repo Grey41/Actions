@@ -50,6 +50,8 @@ def build_wheel(wheel_directory, config_settings = None, metadata_directory = No
         extra = ["-Lsdl/build"]
         packages = [ "libxcursor-dev", "libxi-dev", "libxinerama-dev", "libxrandr-dev"]
 
+        print("AAA", shutil.which("apk"), shutil.which("apt-get"))
+
         if shutil.which("apk"):
             subprocess.run(["apk", "add", "--no-cache", *packages])
 
