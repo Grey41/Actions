@@ -75,7 +75,8 @@ def build_wheel(wheel_directory, config_settings = None, metadata_directory = No
             "-DSDL_X11_XRANDR=OFF",
             "-DSDL_X11_XSS=OFF",
             "-DSDL_X11_XVIDMODE=OFF",
-            "-DSDL_X11_XTEST=OFF"
+            "-DSDL_X11_XTEST=OFF",
+            "-DSDL_X11_XSCRNSAVER=OFF"
         ])
 
         subprocess.run(["cmake", "--build", "sdl/build", "--config", "Release"])
