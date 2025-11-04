@@ -41,14 +41,18 @@ jobs:
         run: docker start build
 
       - name: Build wheels
-        run: docker exec build ls
+        run: |
+          docker exec build bash -c '
+            for py in cp313-cp313 cp313-cp313t cp314-cp314 cp314-cp314t; do
+            /opt/python/$py/bin/python -m build --wheel
+          done'
 
         # for py in cp313-cp313 cp313-cp313t cp314-cp314 cp314-cp314t; do
         #   docker exec build /opt/python/$py/bin/python -m build --wheel
         # done
 
-      # - name: Test
-      #   run: docker exec build ls dist
+      - name: Test
+        run: docker exec build ls dist
 
       - name: Remove container
         if: always()
