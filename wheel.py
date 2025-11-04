@@ -70,11 +70,9 @@ def build_wheel(wheel_directory, config_settings = None, metadata_directory = No
             "-DSDL_POWER=OFF",
             "-DSDL_SENSOR=OFF",
             "-DSDL_DIALOG=OFF",
+            "-DSDL_TOUCH=OFF",
             "-DSDL_X11_XCURSOR=OFF",
-            "-DSDL_X11_XINERAMA=OFF",
             "-DSDL_X11_XRANDR=OFF",
-            "-DSDL_X11_XSS=OFF",
-            "-DSDL_X11_XVIDMODE=OFF",
             "-DSDL_X11_XTEST=OFF",
             "-DSDL_X11_XSCRNSAVER=OFF"
         ])
@@ -115,10 +113,3 @@ def build_wheel(wheel_directory, config_settings = None, metadata_directory = No
     file.writestr(f"JoBase-{VERSION}.dist-info/RECORD", "\n".join(lines))
 
     return wheel
-
-# sudo apt-get install build-essential git make \
-# pkg-config cmake ninja-build gnome-desktop-testing libasound2-dev libpulse-dev \
-# libaudio-dev libfribidi-dev libjack-dev libsndio-dev libx11-dev libxext-dev \
-# libxrandr-dev libxcursor-dev libxfixes-dev libxi-dev libxss-dev libxtst-dev \
-# libxkbcommon-dev libdrm-dev libgbm-dev libgl1-mesa-dev libgles2-mesa-dev \
-# libegl1-mesa-dev libdbus-1-dev libibus-1.0-dev libudev-dev
