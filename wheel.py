@@ -50,7 +50,7 @@ def build_wheel(wheel_directory, config_settings = None, metadata_directory = No
 
     if not pathlib.Path("sdl/build").exists():
         subprocess.run([
-            "cmake", "sdl", "-B", "sdl/build",
+            "cmake", "-S", "sdl", "-B", "sdl/build",
             "-DBUILD_SHARED_LIBS=OFF",
             "-DCMAKE_OSX_ARCHITECTURES=x86_64;arm64",
             "-DCMAKE_OSX_DEPLOYMENT_TARGET=10.13",
