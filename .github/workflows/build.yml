@@ -17,7 +17,7 @@ jobs:
       matrix:
         arch:
           # - [x86_64, manylinux_2_34_x86_64]
-          - [i686, manylinux_2_34_i686]
+          # - [i686, manylinux_2_34_i686]
           # - [ppc64le, manylinux_2_34_ppc64le]
           # - [s390x, manylinux_2_34_s390x]
           # - [aarch64, manylinux_2_39_aarch64]
