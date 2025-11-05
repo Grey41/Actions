@@ -29,14 +29,12 @@ jobs:
         run: |
           call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" ${{matrix.arch[2]}}
 
-          for %py in (3.13.9 3.14.0)
-          do
+          for %py in (3.13.9 3.14.0) do (
             curl -L -o python.zip https://www.python.org/ftp/python/%py/python-%py-${{matrix.arch[1]}}.zip
             tar -xf python.zip -C %py
 
             %py/python.exe -m build --wheel
-            ls
-          done
+            ls)
 
 
   # linux:
