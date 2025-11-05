@@ -70,7 +70,8 @@ def build_wheel(wheel_directory, config_settings = None, metadata_directory = No
             "-DSDL_POWER=OFF",
             "-DSDL_SENSOR=OFF",
             "-DSDL_DIALOG=OFF",
-            "-DSDL_X11=OFF"
+            "-DSDL_X11=OFF",
+            "-DSDL_WAYLAND=ON"
             # "-DSDL_X11_XCURSOR=OFF",
             # "-DSDL_X11_XRANDR=OFF",
             # "-DSDL_X11_XTEST=OFF",
