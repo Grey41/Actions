@@ -27,7 +27,7 @@ def build_wheel(wheel_directory, config_settings = None, metadata_directory = No
         lines.append(f"{path},sha256={code},{len(bytes)}")
 
     build, flags, include, ext, ver = sysconfig.get_config_vars("BLDSHARED", "OPT", "INCLUDEPY", "EXT_SUFFIX", "py_version_nodot")
-    plat = os.environ.get('PLAT', sysconfig.get_platform().replace("-", "_").replace(".", "_"))
+    plat = os.environ.get("PLAT", sysconfig.get_platform().replace("-", "_").replace(".", "_"))
     tag = f"cp{ver}-cp{ver}{sys.abiflags}-{plat}"
     wheel = f"JoBase-{VERSION}-{tag}.whl"
     file = zipfile.ZipFile(pathlib.Path(wheel_directory) / wheel, "w")
