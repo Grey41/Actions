@@ -44,18 +44,16 @@ def build_wheel(wheel_directory, config_settings = None, metadata_directory = No
         "-framework", "AppKit",
         "-g0", "-Wstrict-prototypes",
         "-Lsdl/build"
-    ]
-
-    if sys.platform == "linux":
-        extra = ["-Lsdl/build"]
-
-        if shutil.which("apk"):
-            subprocess.run(["apk", "add", "--no-cache", "wayland-dev", "wayland-protocols", "mesa-dev", "libdrm-dev"])
-
-        elif shutil.which("dnf"):
-            subprocess.run(["dnf", "install", "-y", "libxkbcommon-devel", "wayland-devel", "wayland-protocols-devel", "mesa-libEGL-devel"])
+    ] if sys.platform == "darwin" else ["-Lsdl/build"]
 
     if not pathlib.Path("sdl/build").exists():
+        if sys.platform == "linux":
+            if shutil.which("apk"):
+                subprocess.run(["apk", "add", "--no-cache", "libxkbcommon-dev", "wayland-dev", "wayland-protocols", "mesa-dev", "libdrm-dev"])
+
+            elif shutil.which("dnf"):
+                subprocess.run(["dnf", "install", "-y", "libxkbcommon-devel", "wayland-devel", "wayland-protocols-devel", "mesa-libEGL-devel"])
+
         subprocess.run([
             "cmake", "-S", "sdl", "-B", "sdl/build",
             "-DBUILD_SHARED_LIBS=OFF",
