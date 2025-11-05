@@ -26,8 +26,9 @@ jobs:
           submodules: recursive
 
       - name: Build wheels
+        shell: cmd
         run: |
-          "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvarsall.bat" ${{matrix.arch[2]}}
+          call "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvarsall.bat" ${{matrix.arch[2]}}
 
           for py in 3.13.9 3.14.0
           do
