@@ -1,6 +1,5 @@
 #define CALL(e) PyObject_CallObject((PyObject*)&e,NULL)
 #define ADD(n, t) CHECK(PyModule_Add(program,n,t))
-#define FILE(n, s) path[len]=0;if(PyModule_AddStringConstant(program,n,strcat(path,"images/"s".png"))){free(path);goto fail;}
 #define CHECK(e) if(e)goto fail;
 
 #include "main.h"
@@ -344,7 +343,7 @@ static GLuint compile(const GLchar *vs, const GLchar *fs) {
     glDeleteShader(fragment);
 
     glLinkProgram(program);
-    glUniformBlockBinding(program, glGetUniformBlockIndex(program, "c"), 0);
+    glUniformBlockBinding(program, glGetUniformBlockIndex(program, "camera"), 0);
 
     return program;
 }
@@ -474,21 +473,45 @@ static int module_exec(PyObject *self) {
             SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
             SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 
+            char *path = NULL;
             window.sdl = SDL_CreateWindow(NULL, 0, 0, SDL_WINDOW_OPENGL | SDL_WINDOW_HIDDEN | SDL_WINDOW_RESIZABLE);
 
             if (window.sdl && (window.ctx = SDL_GL_CreateContext(window.sdl)) && SDL_GL_SetSwapInterval(1)) {
-#ifndef __EMSCRIPTEN__
-                if (!gladLoadGLLoader((GLADloadproc) SDL_GL_GetProcAddress)) {
-                    PyErr_SetString(PyExc_OSError, "Failed to load OpenGL");
-                    goto fail;
-                }
-#endif
                 CHECK(PyDict_GetItemStringRef(PySys_GetObject("modules"), "__main__", &program) < 0)
 
                 if (!program) {
                     PyErr_SetString(PyExc_ModuleNotFoundError, "Couldn't find module '__main__'");
                     goto fail;
                 }
+#ifdef __EMSCRIPTEN__
+                #define FILE(n, s) CHECK(PyModule_AddStringConstant(program,n,s))
+#else
+                #define FILE(n, s) path[len]=0;if(PyModule_AddStringConstant(program,n,strcat(path,s))){free(path);goto fail;}
+
+                if (!gladLoadGLLoader((GLADloadproc) SDL_GL_GetProcAddress)) {
+                    PyErr_SetString(PyExc_OSError, "Failed to load OpenGL");
+                    goto fail;
+                }
+
+                PyObject *file = PyObject_GetAttrString(self, "__file__");
+                Py_ssize_t size;
+
+                CHECK(!file)
+                const char *str = PyUnicode_AsUTF8AndSize(file, &size);
+
+                if (!str) {
+                    Py_DECREF(file);
+                    goto fail;
+                }
+
+                char *path = strdup(str);
+                const char *last = strrchr(path, '/');
+                const size_t len = size - strlen(last ? last : strrchr(path, '\\')) + 1;
+
+                Py_DECREF(file);
+#endif
+                FILE("MAN", "images/man.png")
+                free(path);
 
                 CHECK(PyType_Ready(&WindowType))
                 CHECK(PyType_Ready(&MouseType))
@@ -529,28 +552,8 @@ static int module_exec(PyObject *self) {
                 ADD("Line", (PyObject *) &LineType)
                 ADD("Image", (PyObject *) &ImageType)
 
-                PyObject *file = PyObject_GetAttrString(self, "__file__");
-                Py_ssize_t size;
-
-                CHECK(!file)
-                const char *str = PyUnicode_AsUTF8AndSize(file, &size);
-
-                if (!str) {
-                    Py_DECREF(file);
-                    goto fail;
-                }
-
-                char *path = strdup(str);
-                const char *last = strrchr(path, '/');
-                const size_t len = size - strlen(last ? last : strrchr(path, '\\')) + 1;
-
-                Py_DECREF(file);
-                FILE("MAN", "man")
-
-                free(path);
                 qsort(keys, LEN(keys), sizeof(Key), (int (*)(const void *, const void *)) compare);
                 qsort(mods, LEN(mods), sizeof(Key), (int (*)(const void *, const void *)) compare);
-
                 qsort(key, LEN(keys), sizeof(Button), (int (*)(const void *, const void *)) name);
                 qsort(mod, LEN(mods), sizeof(Button), (int (*)(const void *, const void *)) name);
 
@@ -631,7 +634,6 @@ static int module_exec(PyObject *self) {
                 glBindBuffer(GL_UNIFORM_BUFFER, shader.ubo);
                 glBufferData(GL_UNIFORM_BUFFER, 48, NULL, GL_DYNAMIC_DRAW);
                 glBindBufferBase(GL_UNIFORM_BUFFER, 0, shader.ubo);
-
                 glActiveTexture(GL_TEXTURE0);
 
                 return PyModule_AddFunctions(program, module_methods);

@@ -46,6 +46,8 @@ def build_wheel(wheel_directory, config_settings = None, metadata_directory = No
         "-Lsdl/build"
     ] if sys.platform == "darwin" else ["-Lsdl/build"]
 
+    print("AAAAA", sys.maxsize, 2**32)
+
     if not pathlib.Path("sdl/build").exists():
         if sys.platform == "linux":
             if shutil.which("apk"):

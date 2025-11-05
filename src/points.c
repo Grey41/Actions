@@ -79,18 +79,20 @@ Points *points_new(Shape *parent, int (*update)(Shape *)) {
 }
 
 int points_set(PyObject *value, Shape *shape) {
-    DEL(value, "points")
+    if (value) {
+        PyObject *list = PySequence_Fast(value, "Must be an iterable");
+        INIT(!list)
 
-    PyObject *list = PySequence_Fast(value, "Must be an iterable");
-    INIT(!list)
+        shape -> len = PySequence_Fast_GET_SIZE(list);
+        shape -> data = PyMem_Realloc(shape -> data, shape -> len * sizeof(Vec2));
 
-    shape -> len = PySequence_Fast_GET_SIZE(list);
-    shape -> data = PyMem_Realloc(shape -> data, shape -> len * sizeof(Vec2));
+        for (size_t i = 0; i < shape -> len; i ++)
+            INIT(vector_set(PySequence_Fast_GET_ITEM(list, i), (double *) &shape -> data[i], 2));
 
-    for (size_t i = 0; i < shape -> len; i ++)
-        INIT(vector_set(PySequence_Fast_GET_ITEM(list, i), (double *) &shape -> data[i], 2));
+        Py_DECREF(list);
+    }
 
-    return Py_DECREF(list), 0;
+    return 0;
 }
 
 static PySequenceMethods points_as_sequence = {

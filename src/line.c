@@ -115,6 +115,7 @@ static Points *line_get_points(Shape *self, void *closure) {
 }
 
 static int line_set_points(Line *self, PyObject *value, void *closure) {
+    DEL(value, "points")
     return points_set(value, &self -> base) ? -1 : create(self);
 }
 

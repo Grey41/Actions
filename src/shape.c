@@ -36,6 +36,7 @@ static Points *shape_get_points(Shape *self, void *closure) {
 }
 
 static int shape_set_points(Shape *self, PyObject *value, void *closure) {
+    DEL(value, "points")
     return points_set(value, self) ? -1 : create(self);
 }
 
