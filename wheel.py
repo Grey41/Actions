@@ -50,10 +50,10 @@ def build_wheel(wheel_directory, config_settings = None, metadata_directory = No
         extra = ["-Lsdl/build"]
 
         if shutil.which("apk"):
-            subprocess.run(["apk", "add", "--no-cache", "libxi-dev", "wayland-dev", "wayland-protocols", "mesa-dev", "libdrm-dev"])
+            subprocess.run(["apk", "add", "--no-cache", "wayland-dev", "wayland-protocols", "mesa-dev", "libdrm-dev"])
 
         elif shutil.which("dnf"):
-            subprocess.run(["dnf", "install", "-y", "libXi-devel", "wayland-devel", "wayland-protocols-devel", "mesa-libEGL-devel"])
+            subprocess.run(["dnf", "install", "-y", "libxkbcommon-devel", "wayland-devel", "wayland-protocols-devel", "mesa-libEGL-devel"])
 
     if not pathlib.Path("sdl/build").exists():
         subprocess.run([
@@ -62,6 +62,7 @@ def build_wheel(wheel_directory, config_settings = None, metadata_directory = No
             "-DSDL_SHARED=OFF"
             "-DCMAKE_OSX_ARCHITECTURES=x86_64;arm64",
             "-DCMAKE_OSX_DEPLOYMENT_TARGET=10.13",
+            "-DCMAKE_BUILD_TYPE=Release",
             "-DSDL_AUDIO=OFF",
             "-DSDL_CAMERA=OFF",
             "-DSDL_JOYSTICK=OFF",
@@ -70,13 +71,14 @@ def build_wheel(wheel_directory, config_settings = None, metadata_directory = No
             "-DSDL_POWER=OFF",
             "-DSDL_SENSOR=OFF",
             "-DSDL_DIALOG=OFF",
-            "-DSDL_X11_XCURSOR=OFF",
-            "-DSDL_X11_XRANDR=OFF",
-            "-DSDL_X11_XTEST=OFF",
-            "-DSDL_X11_XSCRNSAVER=OFF"
+            "-DSDL_X11=OFF"
+            # "-DSDL_X11_XCURSOR=OFF",
+            # "-DSDL_X11_XRANDR=OFF",
+            # "-DSDL_X11_XTEST=OFF",
+            # "-DSDL_X11_XSCRNSAVER=OFF"
         ])
 
-        subprocess.run(["cmake", "--build", "sdl/build", "--config", "Release"])
+        subprocess.run(["cmake", "--build", "sdl/build"])
 
     subprocess.run(["pkg-config", "--modversion", "wayland-client"])
 
