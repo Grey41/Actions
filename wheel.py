@@ -72,15 +72,9 @@ def build_wheel(wheel_directory, config_settings = None, metadata_directory = No
             "-DSDL_SENSOR=OFF",
             "-DSDL_DIALOG=OFF",
             "-DSDL_X11=OFF"
-            # "-DSDL_X11_XCURSOR=OFF",
-            # "-DSDL_X11_XRANDR=OFF",
-            # "-DSDL_X11_XTEST=OFF",
-            # "-DSDL_X11_XSCRNSAVER=OFF"
         ])
 
         subprocess.run(["cmake", "--build", "sdl/build"])
-
-    subprocess.run(["pkg-config", "--modversion", "wayland-client"])
 
     subprocess.run([
         *build.split(), *flags.split(), *extra,

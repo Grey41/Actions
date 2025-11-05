@@ -16,19 +16,19 @@ jobs:
     strategy:
       matrix:
         arch:
-          - [x86_64, manylinux_2_34_x86_64]
-          # - [i686, manylinux_2_34_i686]
-          # - [ppc64le]
-          # - [s390x]
-          # - [aarch64]
-          # - [riscv64]
-          # - [Musl x86_64]
-          # - [Musl i686]
-          # - [Musl aarch64]
-          # - [Musl ppc64le]
-          # - [Musl s390x]
-          # - [Musl armv7l]
-          # - [Musl riscv64]
+          # - [x86_64, manylinux_2_34_x86_64]
+          - [i686, manylinux_2_34_i686]
+          # - [ppc64le, manylinux_2_34_ppc64le]
+          # - [s390x, manylinux_2_34_s390x]
+          # - [aarch64, manylinux_2_39_aarch64]
+          # - [riscv64, manylinux_2_39_riscv64]
+          - [Musl x86_64, musllinux_1_2_x86_64]
+          # - [Musl i686, musllinux_1_2_i686]
+          # - [Musl aarch64, musllinux_1_2_aarch64]
+          # - [Musl ppc64le, musllinux_1_2_ppc64le]
+          # - [Musl s390x, musllinux_1_2_s390x]
+          # - [Musl armv7l, musllinux_1_2_armv7l]
+          # - [Musl riscv64, musllinux_1_2_riscv64]
 
     steps:
       - name: Checkout
@@ -40,27 +40,10 @@ jobs:
         run: |
           docker run --rm -v ${{github.workspace}}:/src -w /src quay.io/pypa/${{matrix.arch[1]}} bash -c '
             for py in cp313-cp313 cp313-cp313t cp314-cp314 cp314-cp314t; do
-            /opt/python/$py/bin/python -m build --wheel
-            ls ./dist
-          done'
+              /opt/python/$py/bin/python -m build --wheel
+            done'
 
-      # - name: Start container
-      #   run: docker start build
-
-      # - name: Build wheels
-      #   run: |
-      #     docker exec build bash -c '
-      #       for py in cp313-cp313 cp313-cp313t cp314-cp314 cp314-cp314t; do
-      #       /opt/python/$py/bin/python -m build --wheel
-      #     done'
-
-        # for py in cp313-cp313 cp313-cp313t cp314-cp314 cp314-cp314t; do
-        #   docker exec build /opt/python/$py/bin/python -m build --wheel
-        # done
-
-      # - name: Test
-      #   run: docker exec build ls dist
-
-      # - name: Remove container
-      #   if: always()
-      #   run: docker rm -f build
+      # - name: Upload wheels
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     path: dist/*.whl
