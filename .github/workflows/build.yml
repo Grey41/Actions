@@ -25,7 +25,8 @@ jobs:
         with:
           submodules: recursive
 
-      - uses: Set up MSVC
+      - name: Set up MSVC
+        uses: ilammy/msvc-dev-cmd@v1
         with:
           arch: ${{matrix.arch[1]}}
 
