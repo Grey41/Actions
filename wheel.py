@@ -2,6 +2,8 @@ import subprocess, sysconfig, pathlib, sys, zipfile, hashlib, base64, shutil, os
 
 VERSION = "3.1"
 
+print("ENVVV", os.environ['plat'])
+
 def build_wheel(wheel_directory, config_settings = None, metadata_directory = None):
     def write(src, path):
         file.write(src, "JoBase/" + path)

@@ -13,6 +13,9 @@ jobs:
     name: Linux ${{matrix.arch[0]}}
     runs-on: ubuntu-latest
 
+    env:
+      plat: ${{matrix.arch[1]}}
+
     strategy:
       matrix:
         arch:
@@ -41,6 +44,8 @@ jobs:
           docker run --rm -v ${{github.workspace}}:/src -w /src quay.io/pypa/${{matrix.arch[1]}} bash -c '
             for py in cp313-cp313 cp313-cp313t cp314-cp314 cp314-cp314t; do
               /opt/python/$py/bin/python -m build --wheel
+              /opt/python/$py/bin/python -m pip install dist/*.whl
+              /opt/python/$py/bin/python -c "import JoBase;print('hellooooooooaa')"
             done'
 
       # - name: Upload wheels
