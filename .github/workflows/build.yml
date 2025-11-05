@@ -41,9 +41,11 @@ jobs:
           docker run --rm -e PLAT=${{matrix.arch[1]}} -v ${{github.workspace}}:/src -w /src quay.io/pypa/${{matrix.arch[1]}} bash -c '
             for py in cp313-cp313 cp313-cp313t cp314-cp314 cp314-cp314t; do
               /opt/python/$py/bin/python -m build --wheel
-              /opt/python/$py/bin/python -m venv /tmp
-              /tmp/bin/pip install dist/*-$py-*.whl
-              /tmp/bin/python -c "import JoBase;print('hellooooooooaa')"
+              /opt/python/$py/bin/python -m venv .venv
+
+              .venv/bin/pip install dist/*-$py-*.whl
+              SDL_VIDEODRIVER=dummy .venv/bin/python -c "import JoBase;print(run)"
+              rm -rf .venv
             done'
 
       # - name: Upload wheels
