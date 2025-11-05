@@ -16,8 +16,8 @@ jobs:
     strategy:
       matrix:
         arch:
-          - [x86_64, amd64]
-          # - [x86, win32]
+          - [x86_64, amd64, x86_amd64]
+          # - [x86, win32, x86]
 
     steps:
       - name: Checkout
@@ -25,13 +25,10 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Set up MSVC
-        uses: ilammy/msvc-dev-cmd@v1
-        with:
-          arch: ${{matrix.arch[1]}}
-
       - name: Build wheels
         run: |
+          call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" ${{matrix.arch[2]}}
+
           foreach ($py in 3.13.9,3.14.0) {
             curl -L -o python.zip https://www.python.org/ftp/python/$py/python-$py-${{matrix.arch[1]}}.zip
             tar -xf python.zip -C $py
