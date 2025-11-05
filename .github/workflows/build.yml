@@ -32,12 +32,13 @@ jobs:
 
       - name: Build wheels
         run: |
-          FOR %py in (3.13.9 3.14.0) DO (
-            curl -L -o python.zip https://www.python.org/ftp/python/%py/python-%py-${{matrix.arch[1]}}.zip
-            tar -xf python.zip -C %py
+          foreach ($py in (3.13.9 3.14.0)) {
+            curl -L -o python.zip https://www.python.org/ftp/python/$py/python-$py-${{matrix.arch[1]}}.zip
+            tar -xf python.zip -C $py
 
-            %py/python.exe -m build --wheel
-            ls)
+            $py/python.exe -m build --wheel
+            ls
+          }
 
 
   # linux:
