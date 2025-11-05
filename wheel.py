@@ -61,6 +61,7 @@ def build_wheel(wheel_directory, config_settings = None, metadata_directory = No
             "-DCMAKE_OSX_ARCHITECTURES=x86_64;arm64",
             "-DCMAKE_OSX_DEPLOYMENT_TARGET=10.13",
             "-DCMAKE_BUILD_TYPE=Release",
+            "-DCMAKE_POSITION_INDEPENDENT_CODE=ON",
             "-DSDL_AUDIO=OFF",
             "-DSDL_CAMERA=OFF",
             "-DSDL_JOYSTICK=OFF",
