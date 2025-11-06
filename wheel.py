@@ -31,20 +31,9 @@ def build_wheel(wheel_directory, config_settings = None, metadata_directory = No
     wheel = f"JoBase-{VERSION}-{tag}.whl"
     file = zipfile.ZipFile(pathlib.Path(wheel_directory) / wheel, "w")
     out = "__init__" + ext
-    lines = []
 
-    extra = [
-        "-luser32", "-lwinmm", "-ladvapi32",
-        "-lole32", "-lgdi32", "-lshell32",
-        "-lsetupapi", "-lversion", "-limm32",
-        "-Lsdl/build/Release"
-    ] if sys.platform == "win32" else [
-        "-framework", "GameController",
-        "-framework", "ForceFeedback",
-        "-framework", "AppKit",
-        "-g0", "-Wstrict-prototypes",
-        "-Lsdl/build"
-    ] if sys.platform == "darwin" else ["-Lsdl/build"]
+    lines = []
+    source = [str(src) for src in pathlib.Path("src").glob("*.c")] + [str(src) for src in pathlib.Path("libtess2/Source").glob("*.c")]
 
     print("AAAAA", sys.maxsize, 2**32)
 
@@ -77,12 +66,31 @@ def build_wheel(wheel_directory, config_settings = None, metadata_directory = No
 
         subprocess.run(["cmake", "--build", "sdl/build"])
 
-    subprocess.run([
-        *build.split(), *flags.split(), *extra,
+    if sys.platform == "win32":
+        cmd = [
+            "cl", *source,
+            "/Fodist\\",
+            "/LD", "/MD",
+            "/I", include, "/I", "include", "/I", "libtess2\\Include", "/I", "sdl\\include", "/I", "stb",
+            "/link", "/LIBPATH:sdl\\build\\Release", "SDL3-static.lib", "/LIBPATH:" + sysconfig.get_config_var("LIBDIR"),
+            "user32.lib", "winmm.lib", "advapi32.lib", "ole32.lib", "gdi32.lib", "shell32.lib", "setupapi.lib", "version.lib", "imm32.lib",
+            "/OUT:" + pathlib.Path(wheel_directory) / out
+        ]
+
+        print(" ".join(cmd))
+        subprocess.run(cmd)
+
+    else: subprocess.run([
+        *build.split(), *flags.split(), *([
+        "-framework", "GameController",
+        "-framework", "ForceFeedback",
+        "-framework", "AppKit",
+        "-g0", "-Wstrict-prototypes"
+    ] if sys.platform == "darwin" else []),
         *(str(src) for src in pathlib.Path("src").glob("*.c")),
         *(str(src) for src in pathlib.Path("libtess2/Source").glob("*.c")),
         "-I" + include, "-Iinclude", "-Ilibtess2/Include", "-Isdl/include", "-Istb",
-        "-lSDL3", "-fPIC",
+        "-Lsdl/build", "-lSDL3", "-fPIC",
         "-o", pathlib.Path(wheel_directory) / out
     ])
 
