@@ -27,7 +27,7 @@ jobs:
 
       - name: Build wheels
         run: |
-          call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" ${{matrix.arch[2]}}
+          & "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" ${{matrix.arch[2]}}
 
           foreach ($py in 3.13.9,3.14.0) {
             curl -L -o python.zip https://www.python.org/ftp/python/$py/python-$py-${{matrix.arch[1]}}.zip
