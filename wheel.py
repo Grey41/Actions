@@ -66,6 +66,9 @@ def build_wheel(wheel_directory, config_settings = None, metadata_directory = No
 
         subprocess.run(["cmake", "--build", "sdl/build"])
 
+    subprocess.run(["ls", "sdl\\build"])
+    subprocess.run(["ls", "sdl\\build\\Release"])
+
     if sys.platform == "win32":
         cmd = [
             "cl", "src\\*.c", "libtess2\\Source\\*.c",
