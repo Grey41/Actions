@@ -67,10 +67,6 @@ def build_wheel(wheel_directory, config_settings = None, metadata_directory = No
         subprocess.run(["cmake", "--build", "sdl/build"])
 
     if sys.platform == "win32":
-        print("CMD:", " ".join(cmd))
-        print("CWD:", os.getcwd())
-        print("EXISTS:", os.path.exists(cmd[0]))
-
         cmd = [
             "cl", "src\\*.c", "libtess2\\Source\\*.c"
             "/Fodist\\", "/LD", "/MD",
@@ -81,6 +77,10 @@ def build_wheel(wheel_directory, config_settings = None, metadata_directory = No
             "shell32.lib", "setupapi.lib", "version.lib", "imm32.lib",
             "/OUT:" + str(pathlib.Path(wheel_directory) / out)
         ]
+
+        print("CMD:", " ".join(cmd))
+        print("CWD:", os.getcwd())
+        print("EXISTS:", os.path.exists(cmd[0]))
 
         print(" ".join(cmd))
         subprocess.run(cmd)
