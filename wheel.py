@@ -51,7 +51,6 @@ def build_wheel(wheel_directory, config_settings = None, metadata_directory = No
             "-DSDL_SHARED=OFF",
             "-DCMAKE_OSX_ARCHITECTURES=x86_64;arm64",
             "-DCMAKE_OSX_DEPLOYMENT_TARGET=10.13",
-            "-DCMAKE_BUILD_TYPE=Release",
             "-DCMAKE_POSITION_INDEPENDENT_CODE=ON",
             "-DSDL_AUDIO=OFF",
             "-DSDL_CAMERA=OFF",
@@ -64,7 +63,7 @@ def build_wheel(wheel_directory, config_settings = None, metadata_directory = No
             "-DSDL_X11=OFF"
         ])
 
-        subprocess.run(["cmake", "--build", "sdl/build"])
+        subprocess.run(["cmake", "--build", "sdl/build", "--config", "Release"])
 
     subprocess.run(["ls", "sdl\\build"])
     subprocess.run(["ls", "sdl\\build\\Release"])
