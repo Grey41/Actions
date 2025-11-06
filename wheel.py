@@ -74,7 +74,7 @@ def build_wheel(wheel_directory, config_settings = None, metadata_directory = No
             "/I", include, "/I", "include", "/I", "libtess2\\Include", "/I", "sdl\\include", "/I", "stb",
             "/link", "/LIBPATH:sdl\\build\\Release", "SDL3-static.lib", "/LIBPATH:" + sysconfig.get_config_var("LIBDIR"),
             "user32.lib", "winmm.lib", "advapi32.lib", "ole32.lib", "gdi32.lib", "shell32.lib", "setupapi.lib", "version.lib", "imm32.lib",
-            "/OUT:" + pathlib.Path(wheel_directory) / out
+            "/OUT:" + str(pathlib.Path(wheel_directory) / out)
         ]
 
         print(" ".join(cmd))
