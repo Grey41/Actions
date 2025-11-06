@@ -23,14 +23,14 @@ jobs:
         run: |
           for py in 3.13.9 3.14.0
           do
-            curl -L -o python.tgz https://www.python.org/ftp/python/$py/python-$py-macos11.tgz
-            tar -xzf python.tgz -C python/$py
+            curl -L -o python.pkg https://www.python.org/ftp/python/$py/python-$py-macos11.pkg
+            pkgutil --expand-full python.pkg python
 
             ls
             ls python
 
-            python/$py/bin/python -m pip install build
-            python/$py/bin/python -m build --wheel
+            # python/$py/bin/python -m pip install build
+            # python/$py/bin/python -m build --wheel
           done
 
   # windows:
