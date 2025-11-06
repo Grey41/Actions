@@ -21,10 +21,12 @@ jobs:
 
       - name: Build wheels
         run: |
+          mkdir python
+
           for py in 3.13.9 3.14.0
           do
-            curl -L -o python.pkg https://www.python.org/ftp/python/$py/python-$py-macos11.pkg
-            pkgutil --expand-full python.pkg python/$py
+            curl -L -o python/$py/python.pkg https://www.python.org/ftp/python/$py/python-$py-macos11.pkg
+            pkgutil --expand-full python/$py/python.pkg python/$py
             installer -pkg python/$py/Python_Framework.pkg -target /
 
             /Library/Frameworks/Python.framework/Versions/Current/bin/python3 -m pip install build
