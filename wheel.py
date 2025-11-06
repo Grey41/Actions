@@ -72,7 +72,7 @@ def build_wheel(wheel_directory, config_settings = None, metadata_directory = No
         print("EXISTS:", os.path.exists(cmd[0]))
 
         cmd = [
-            "cl", "src\*.c", "libtess2\Source\*.c"
+            "cl", "src\\*.c", "libtess2\\Source\\*.c"
             "/Fodist\\", "/LD", "/MD",
             "/I", include, "/I", "include", "/I", "libtess2\\Include", "/I", "sdl\\include", "/I", "stb",
             "/link", "/LIBPATH:sdl\\build\\Release", "SDL3-static.lib",
