@@ -33,7 +33,7 @@ jobs:
             curl -L -o python.zip https://www.python.org/ftp/python/$py/python-$py-${{matrix.arch[1]}}.zip
             tar -xf python.zip -C "python/$py"
 
-            "./python/$py/python.exe" -m build --wheel
+            & "./python/$py/python.exe" -m build --wheel
             ls
           }
 
