@@ -504,8 +504,7 @@ static int module_exec(PyObject *self) {
                     goto fail;
                 }
 
-                char *path = strdup(str);
-                const char *last = strrchr(path, '/');
+                const char *last = strrchr(path = strdup(str), '/');
                 const size_t len = size - strlen(last ? last : strrchr(path, '\\')) + 1;
 
                 Py_DECREF(file);
