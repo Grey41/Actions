@@ -9,15 +9,9 @@ on:
         type: boolean
 
 jobs:
-  windows:
-    name: Windows ${{matrix.arch[0]}}
-    runs-on: windows-latest
-
-    strategy:
-      matrix:
-        arch:
-          # - [x86_64, amd64]
-          - [x86, win32]
+  macos:
+    name: MacOS Universal
+    runs-on: macos-latest
 
     steps:
       - name: Checkout
@@ -25,20 +19,50 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Set up MSVC
-        uses: ilammy/msvc-dev-cmd@v1
-        with:
-          arch: ${{matrix.arch[1]}}
-
       - name: Build wheels
         run: |
-          foreach ($py in "3.13.9", "3.14.0") {
-            curl -L -o python.zip https://www.python.org/ftp/python/$py/python-$py-${{matrix.arch[1]}}.zip
-            Expand-Archive python.zip -DestinationPath python/$py -Force
+          for py in 3.13.9 3.14.0
+          do
+            curl -L -o python.tgz https://www.python.org/ftp/python/$py/python-$py-macos11.tgz
+            tar -xzf python.tgz -C python/$py
 
-            & ./python/$py/python.exe -m pip install build
-            & ./python/$py/python.exe -m build --wheel
-          }
+            ls
+            ls python
+
+            python/$py/bin/python -m pip install build
+            python/$py/bin/python -m build --wheel
+          done
+
+  # windows:
+  #   name: Windows ${matrix.arch[0]}}
+  #   runs-on: windows-latest
+
+  #   strategy:
+  #     matrix:
+  #       arch:
+  #         # - [x86_64, amd64]
+  #         - [x86, win32]
+
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v4
+  #       with:
+  #         submodules: recursive
+
+  #     - name: Set up MSVC
+  #       uses: ilammy/msvc-dev-cmd@v1
+  #       with:
+  #         arch: ${matrix.arch[1]}}
+
+  #     - name: Build wheels
+  #       run: |
+  #         foreach ($py in "3.13.9", "3.13.9t", "3.14.0", "3.14.0t") {
+  #           curl -L -o python.zip https://www.python.org/ftp/python/$py/python-$py-${matrix.arch[1]}}.zip
+  #           Expand-Archive python.zip -DestinationPath python/$py -Force
+
+  #           & ./python/$py/python.exe -m pip install build
+  #           & ./python/$py/python.exe -m build --wheel
+  #         }
 
 
   # linux:
