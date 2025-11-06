@@ -67,13 +67,18 @@ def build_wheel(wheel_directory, config_settings = None, metadata_directory = No
         subprocess.run(["cmake", "--build", "sdl/build"])
 
     if sys.platform == "win32":
+        print("CMD:", " ".join(cmd))
+        print("CWD:", os.getcwd())
+        print("EXISTS:", os.path.exists(cmd[0]))
+
         cmd = [
-            "cl", *source,
-            "/Fodist\\",
-            "/LD", "/MD",
+            "cl", "src\*.c", "libtess2\Source\*.c"
+            "/Fodist\\", "/LD", "/MD",
             "/I", include, "/I", "include", "/I", "libtess2\\Include", "/I", "sdl\\include", "/I", "stb",
-            "/link", "/LIBPATH:sdl\\build\\Release", "SDL3-static.lib", "/LIBPATH:" + sysconfig.get_config_var("LIBDIR"),
-            "user32.lib", "winmm.lib", "advapi32.lib", "ole32.lib", "gdi32.lib", "shell32.lib", "setupapi.lib", "version.lib", "imm32.lib",
+            "/link", "/LIBPATH:sdl\\build\\Release", "SDL3-static.lib",
+            "/LIBPATH:" + sysconfig.get_config_var("LIBDIR"),
+            "user32.lib", "winmm.lib", "advapi32.lib", "ole32.lib", "gdi32.lib",
+            "shell32.lib", "setupapi.lib", "version.lib", "imm32.lib",
             "/OUT:" + str(pathlib.Path(wheel_directory) / out)
         ]
 
@@ -87,8 +92,7 @@ def build_wheel(wheel_directory, config_settings = None, metadata_directory = No
         "-framework", "AppKit",
         "-g0", "-Wstrict-prototypes"
     ] if sys.platform == "darwin" else []),
-        *(str(src) for src in pathlib.Path("src").glob("*.c")),
-        *(str(src) for src in pathlib.Path("libtess2/Source").glob("*.c")),
+        "src/*.c", "libtess2/Source/*.c",
         "-I" + include, "-Iinclude", "-Ilibtess2/Include", "-Isdl/include", "-Istb",
         "-Lsdl/build", "-lSDL3", "-fPIC",
         "-o", pathlib.Path(wheel_directory) / out
