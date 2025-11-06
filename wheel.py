@@ -45,6 +45,7 @@ def build_wheel(wheel_directory, config_settings = None, metadata_directory = No
 
         subprocess.run([
             "cmake", "-S", "sdl", "-B", "sdl/build",
+            *([] if sys.maxsize > 2 ** 32 else ["-A", "Win32"]),
             "-DBUILD_SHARED_LIBS=OFF",
             "-DSDL_SHARED=OFF",
             "-DCMAKE_OSX_ARCHITECTURES=x86_64;arm64",
