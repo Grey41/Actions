@@ -31,9 +31,7 @@ def build_wheel(wheel_directory, config_settings = None, metadata_directory = No
     wheel = f"JoBase-{VERSION}-{tag}.whl"
     file = zipfile.ZipFile(pathlib.Path(wheel_directory) / wheel, "w")
     out = "__init__" + ext
-
     lines = []
-    source = [str(src) for src in pathlib.Path("src").glob("*.c")] + [str(src) for src in pathlib.Path("libtess2/Source").glob("*.c")]
 
     print("AAAAA", sys.maxsize, 2**32)
 
@@ -65,29 +63,16 @@ def build_wheel(wheel_directory, config_settings = None, metadata_directory = No
 
         subprocess.run(["cmake", "--build", "sdl/build", "--config", "Release"])
 
-    subprocess.run(["ls", "sdl\\build"])
-    subprocess.run(["ls", "sdl\\build\\Release"])
-
-    if sys.platform == "win32":
-        cmd = [
-            "cl", "src\\*.c", "libtess2\\Source\\*.c",
-            "/Fodist\\", "/LD", "/MD",
-            "/I", include, "/I", "include", "/I", "libtess2\\Include", "/I", "sdl\\include", "/I", "stb",
-            "/link", "/LIBPATH:sdl\\build\\Release", "SDL3-static.lib",
-            "/LIBPATH:" + sysconfig.get_config_var("LIBDIR"),
-            "user32.lib", "winmm.lib", "advapi32.lib", "ole32.lib", "gdi32.lib",
-            "shell32.lib", "setupapi.lib", "version.lib", "imm32.lib",
-            "/OUT:" + str(pathlib.Path(wheel_directory) / out)
-        ]
-
-        print("CMD:", " ".join(cmd))
-        print("CWD:", os.getcwd())
-        print("EXISTS:", os.path.exists(cmd[0]))
-
-        print(" ".join(cmd))
-        subprocess.run(cmd)
-
-    else: subprocess.run([
+    subprocess.run([
+        "cl", "src\\*.c", "libtess2\\Source\\*.c",
+        "/Fodist\\", "/LD", "/MD",
+        "/I", include, "/I", "include", "/I", "libtess2\\Include", "/I", "sdl\\include", "/I", "stb",
+        "/link", "/LIBPATH:sdl\\build\\Release", "SDL3-static.lib",
+        "/LIBPATH:" + sysconfig.get_config_var("LIBDIR"),
+        "user32.lib", "winmm.lib", "advapi32.lib", "ole32.lib", "gdi32.lib",
+        "shell32.lib", "setupapi.lib", "version.lib", "imm32.lib",
+        "/OUT:" + str(pathlib.Path(wheel_directory) / out)
+    ] if sys.platform == "win32" else [
         *build.split(), *flags.split(), *([
         "-framework", "GameController",
         "-framework", "ForceFeedback",
