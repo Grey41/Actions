@@ -1,4 +1,4 @@
-import subprocess, sysconfig, pathlib, sys, zipfile, hashlib, base64, shutil, os
+import subprocess, sysconfig, pathlib, sys, zipfile, hashlib, base64, shutil, os, glob
 
 VERSION = "3.1"
 
@@ -31,7 +31,9 @@ def build_wheel(wheel_directory, config_settings = None, metadata_directory = No
     wheel = f"JoBase-{VERSION}-{tag}.whl"
     file = zipfile.ZipFile(pathlib.Path(wheel_directory) / wheel, "w")
     out = "__init__" + ext
+
     lines = []
+    source = glob.glob("src/*.c") + glob.glob("libtess2/Source/*.c")
 
     if not pathlib.Path("sdl/build").exists():
         if sys.platform == "linux":
@@ -63,7 +65,7 @@ def build_wheel(wheel_directory, config_settings = None, metadata_directory = No
         subprocess.run(["cmake", "--build", "sdl/build", "--config", "Release"])
 
     subprocess.run([
-        "cl", "src\\*.c", "libtess2\\Source\\*.c",
+        "cl", *source,
         "/Fodist\\", "/LD", "/MD",
         "/I", include, "/I", "include", "/I", "libtess2\\Include", "/I", "sdl\\include", "/I", "stb",
         "/link", "/LIBPATH:sdl\\build\\Release", "SDL3-static.lib",
@@ -78,7 +80,7 @@ def build_wheel(wheel_directory, config_settings = None, metadata_directory = No
         "-framework", "AppKit",
         "-g0", "-Wstrict-prototypes"
     ] if sys.platform == "darwin" else []),
-        "src/*.c", "libtess2/Source/*.c",
+        *source,
         "-I" + include, "-Iinclude", "-Ilibtess2/Include", "-Isdl/include", "-Istb",
         "-Lsdl/build", "-lSDL3", "-fPIC",
         "-o", pathlib.Path(wheel_directory) / out
