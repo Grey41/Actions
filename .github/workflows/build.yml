@@ -24,8 +24,7 @@ jobs:
           for py in 3.13.9 3.14.0
           do
             curl -L -o python.pkg https://www.python.org/ftp/python/$py/python-$py-macos11.pkg
-            pkgutil --expand-full python.pkg python
-            installer -pkg python/Python_Framework.pkg -target /
+            installer -pkg python.pkg -target /
 
             /Library/Frameworks/Python.framework/Versions/Current/bin/python3 -m pip install build
             /Library/Frameworks/Python.framework/Versions/Current/bin/python3 -m build --wheel
