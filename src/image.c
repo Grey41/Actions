@@ -10,36 +10,49 @@ static int load(Image *self, const char *name) {
     stbi_uc *image = stbi_load(name, &width, &height, 0, STBI_rgb_alpha);
 
     if (!image)
-        return PyErr_Format(PyExc_FileNotFoundError, "Failed to load image '%s'", name), -1;
+        return PyErr_Format(PyExc_FileNotFoundError, "Failed to load image '%s', %s", name, stbi_failure_reason()), -1;
 
     Texture *texture = malloc(sizeof(Texture));
 
-    texture -> next = textures;
-    textures = texture;
-
-    glGenTextures(1, &textures -> src);
-    glBindTexture(GL_TEXTURE_2D, textures -> src);
+    glGenTextures(1, &texture -> src);
+    glBindTexture(GL_TEXTURE_2D, texture -> src);
 
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glBindTexture(GL_TEXTURE_2D, 0);
 
-    textures -> width = width;
-    textures -> height = height;
+    texture -> next = textures;
+    texture -> width = width;
+    texture -> height = height;
 
-    textures -> name = strdup(name);
-    self -> src = textures;
+    texture -> name = strdup(name);
+    textures = self -> src = texture;
 
     return stbi_image_free(image), 0;
 }
 
+static PyObject *image_get_name(Image *self, void *closure) {
+    return PyUnicode_FromString(self -> src -> name);
+}
+
+static int image_set_name(Image *self, PyObject *value, void *closure) {
+    DEL(value, "name")
+
+    const char *name = PyUnicode_AsUTF8(value);
+    INIT(!name || load(self, name))
+
+    self -> base.size.x = self -> src -> width;
+    self -> base.size.y = self -> src -> height;
+
+    return 0;
+}
+
 static PyObject *image_draw(Image *self, PyObject *args) {
     glBindTexture(GL_TEXTURE_2D, self -> src -> src);
-    glUseProgram(shader.image);
-    base_matrix(&self -> base.base, shader.i_obj, shader.i_color, self -> base.size.x, self -> base.size.y);
+    glUseProgram(shader.image.src);
+    base_matrix(&self -> base.base, shader.image.obj, shader.image.color, self -> base.size.x, self -> base.size.y);
 
     glBindVertexArray(shader.vao);
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
@@ -65,21 +78,25 @@ static int image_init(Image *self, PyObject *args, PyObject *kwds) {
 
     const char *name = PyUnicode_AsUTF8(src);
 
-    return name && PyArg_ParseTupleAndKeywords(
+    if (!name || !PyArg_ParseTupleAndKeywords(
         args, kwds, "|sdddddO:Image", kwlist,
         &name, &self -> base.base.pos.x,
         &self -> base.base.pos.y,
         &self -> base.base.angle,
         &self -> base.size.x,
         &self -> base.size.y,
-        &color) && !load(self, name) ? (Py_DECREF(src),
-        self -> base.size.x = self -> base.size.x || self -> src -> width,
-        self -> base.size.y = self -> base.size.y || self -> src -> height,
-        vector_set(color, (double *) &self -> base.base.color, 4)) : (Py_DECREF(src), -1);
+        &color) || load(self, name)) return Py_DECREF(src), -1;
+
+    Py_DECREF(src);
+
+    self -> base.size.x = self -> base.size.x ? self -> base.size.x : self -> src -> width;
+    self -> base.size.y = self -> base.size.y ? self -> base.size.y : self -> src -> height;
+
+    return vector_set(color, (double *) &self -> base.base.color, 4);
 }
 
 static PyGetSetDef image_getset[] = {
-    // {"name", (getter) image_get_name, (setter) image_set_name, "The path to the image file", NULL},
+    {"name", (getter) image_get_name, (setter) image_set_name, "The filepath of the image", NULL},
     {NULL}
 };
 

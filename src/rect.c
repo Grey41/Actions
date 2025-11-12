@@ -50,8 +50,8 @@ static int rect_init(Rect *self, PyObject *args, PyObject *kwds) {
 }
 
 static PyObject *rect_draw(Rect *self, PyObject *args) {
-    glUseProgram(shader.plain);
-    base_matrix(&self -> base, shader.p_obj, shader.p_color, self -> size.x, self -> size.y);
+    glUseProgram(shader.plain.src);
+    base_matrix(&self -> base, shader.plain.obj, shader.plain.color, self -> size.x, self -> size.y);
 
     glBindVertexArray(shader.vao);
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
@@ -76,10 +76,8 @@ PyTypeObject RectType = {
     .tp_name = "Rect",
     .tp_doc = "Render rectangles on the screen",
     .tp_basicsize = sizeof(Rect),
-    .tp_itemsize = 0,
     .tp_flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
     .tp_base = &BaseType,
-    .tp_new = PyType_GenericNew,
     .tp_init = (initproc) rect_init,
     .tp_getset = rect_getset,
     .tp_methods = rect_methods

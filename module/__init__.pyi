@@ -215,6 +215,16 @@ class Line(Shape):
 class Image(Rect):
     def __init__(self, name = MAN, x = 0, y = 0, angle = 0, width = 0, height = 0, color = (1, 1, 1, 1)) -> None: ...
 
+    name: str
+
+class Text(Rect):
+    def __init__(self) -> None: ...
+
+class Circle(Base):
+    def __init__(self, x = 0, y = 0, radius = 25, color = (0, 0, 0, 1)) -> None: ...
+
+    radius: float
+
 def run() -> None: ...
 
 window: Window
@@ -222,7 +232,10 @@ mouse: Mouse
 camera: Camera
 key: Key
 
+MAN: str
+
 __all__ = [
     "window", "mouse", "camera", "key", "run",
-    "Rect", "Shape", "Line", "Image"
+    "Rect", "Shape", "Line", "Image", "Circle", "Text"
+    "MAN"
 ]

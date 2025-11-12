@@ -43,8 +43,6 @@ static int shape_set_points(Shape *self, PyObject *value, void *closure) {
 static Shape *shape_new(PyTypeObject *type, PyObject *args, PyObject *kwds) {
     Shape *self = (Shape *) BaseType.tp_new(type, args, kwds);
 
-    printf("NEW\n");
-
     if (self) {
         GLuint buffers[2];
 
@@ -67,8 +65,8 @@ static Shape *shape_new(PyTypeObject *type, PyObject *args, PyObject *kwds) {
 }
 
 static PyObject *shape_draw(Shape *self, PyObject *args) {
-    glUseProgram(shader.plain);
-    base_matrix(&self -> base, shader.p_obj, shader.p_color, 1, 1);
+    glUseProgram(shader.plain.src);
+    base_matrix(&self -> base, shader.plain.obj, shader.plain.color, 1, 1);
 
     glBindVertexArray(self -> vao);
     glDrawElements(GL_TRIANGLES, self -> indices, GL_UNSIGNED_INT, 0);

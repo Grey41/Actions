@@ -1,3 +1,14 @@
+/*
+TODO:
+
+Base - top, bottom, left, right
+Remove PyType_GenericNew
+Constants (colours)
+Ellipse?
+Check OpenGL binding to zero
+Check all mallocs and strdup
+*/
+
 #define CALL(e) PyObject_CallObject((PyObject*)&e,NULL)
 #define ADD(n, t) CHECK(PyModule_Add(program,n,t))
 #define CHECK(e) if(e)goto fail;
@@ -296,8 +307,10 @@ struct Window window;
 struct Camera camera;
 struct Shader shader;
 
+// FT_Library library;
 PyObject *program;
 Texture *textures;
+Font *fonts;
 
 Button button[LEN(buttons)];
 Button key[LEN(keys)];
@@ -327,25 +340,26 @@ static Key *search(uint32_t code, Key *list, size_t size) {
     return bsearch(&code, list, size, sizeof(Key), (int (*)(const void *, const void *)) compare);
 }
 
-static GLuint compile(const GLchar *vs, const GLchar *fs) {
-    GLuint program = glCreateProgram();
-    GLuint vertex = glCreateShader(GL_VERTEX_SHADER);
-    GLuint fragment = glCreateShader(GL_FRAGMENT_SHADER);
+static GLuint compile(GLenum type, const GLchar *source) {
+    GLuint shader = glCreateShader(type);
 
-    glShaderSource(vertex, 1, &vs, NULL);
-    glShaderSource(fragment, 1, &fs, NULL);
-    glCompileShader(vertex);
-    glCompileShader(fragment);
+    glShaderSource(shader, 1, &source, NULL);
+    glCompileShader(shader);
 
-    glAttachShader(program, vertex);
-    glAttachShader(program, fragment);
-    glDeleteShader(vertex);
-    glDeleteShader(fragment);
+    return shader;
+}
 
-    glLinkProgram(program);
-    glUniformBlockBinding(program, glGetUniformBlockIndex(program, "camera"), 0);
+static void create(struct Program *program, GLuint vertex, GLuint fragment) {
+    program -> src = glCreateProgram();
 
-    return program;
+    glAttachShader(program -> src, vertex);
+    glAttachShader(program -> src, fragment);
+
+    glLinkProgram(program -> src);
+    glUniformBlockBinding(program -> src, glGetUniformBlockIndex(program -> src, "camera"), 0);
+
+    program -> obj = glGetUniformLocation(program -> src, "object");
+    program -> color = glGetUniformLocation(program -> src, "color");
 }
 
 static int update(PyObject *loop) {
@@ -472,6 +486,7 @@ static int module_exec(PyObject *self) {
             SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
             SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
             SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+            SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 0);
 
             char *path = NULL;
             window.sdl = SDL_CreateWindow(NULL, 0, 0, SDL_WINDOW_OPENGL | SDL_WINDOW_HIDDEN | SDL_WINDOW_RESIZABLE);
@@ -493,6 +508,11 @@ static int module_exec(PyObject *self) {
                     goto fail;
                 }
 
+                // if (FT_Init_FreeType(&library)) {
+                //     PyErr_SetString(PyExc_OSError, "Failed to load FreeType");
+                //     goto fail;
+                // }
+
                 PyObject *file = PyObject_GetAttrString(self, "__file__");
                 Py_ssize_t size;
 
@@ -510,6 +530,7 @@ static int module_exec(PyObject *self) {
                 Py_DECREF(file);
 #endif
                 FILE("MAN", "images/man.png")
+                FILE("DEFAULT", "fonts/default.ttf")
                 free(path);
 
                 CHECK(PyType_Ready(&WindowType))
@@ -525,6 +546,8 @@ static int module_exec(PyObject *self) {
                 CHECK(PyType_Ready(&PointsType))
                 CHECK(PyType_Ready(&LineType))
                 CHECK(PyType_Ready(&ImageType))
+                CHECK(PyType_Ready(&CircleType))
+                CHECK(PyType_Ready(&TextType))
                 CHECK(!PyObject_Init(&keyboard.map, &ModType))
 
                 for (uint16_t i = 0; i < LEN(keys); i ++) {
@@ -550,6 +573,8 @@ static int module_exec(PyObject *self) {
                 ADD("Shape", (PyObject *) &ShapeType)
                 ADD("Line", (PyObject *) &LineType)
                 ADD("Image", (PyObject *) &ImageType)
+                ADD("Circle", (PyObject *) &CircleType)
+                ADD("Text", (PyObject *) &TextType)
 
                 qsort(keys, LEN(keys), sizeof(Key), (int (*)(const void *, const void *)) compare);
                 qsort(mods, LEN(mods), sizeof(Key), (int (*)(const void *, const void *)) compare);
@@ -559,10 +584,7 @@ static int module_exec(PyObject *self) {
                 GLfloat data[] = {-.5, .5, 0, 0, .5, .5, 1, 0, -.5, -.5, 0, 1, .5, -.5, 1, 1};
                 GLuint buffers[2];
 
-                glGenVertexArrays(1, &shader.vao);
-                glGenBuffers(2, buffers);
-
-                shader.plain = compile(
+                GLuint vn = compile(GL_VERTEX_SHADER,
                     "#version " VERSION "\n"
 
                     "layout(std140) uniform camera { mat3 view; };"
@@ -570,10 +592,11 @@ static int module_exec(PyObject *self) {
 
                     "uniform mat3 object;"
 
-                    "void main(){"
+                    "void main() {"
                         "gl_Position = vec4(view * object * vec3(vert, 1), 1);"
-                    "}",
+                    "}");
 
+                GLuint fn = compile(GL_FRAGMENT_SHADER,
                     "#version " VERSION "\n"
                     "precision mediump float;"
 
@@ -584,7 +607,7 @@ static int module_exec(PyObject *self) {
                         "frag = color;"
                     "}");
 
-                shader.image = compile(
+                GLuint vi = compile(GL_VERTEX_SHADER,
                     "#version " VERSION "\n"
 
                     "layout(std140) uniform camera { mat3 view; };"
@@ -595,10 +618,11 @@ static int module_exec(PyObject *self) {
                     "out vec2 pos;"
 
                     "void main() {"
-                        "gl_Position=vec4(view * object * vec3(vert, 1), 1);"
+                        "gl_Position = vec4(view * object * vec3(vert, 1), 1);"
                         "pos = coord;"
-                    "}",
+                    "}");
 
+                GLuint fi = compile(GL_FRAGMENT_SHADER,
                     "#version " VERSION "\n"
                     "precision mediump float;"
 
@@ -612,11 +636,49 @@ static int module_exec(PyObject *self) {
                         "frag = color * texture(sampler, pos);"
                     "}");
 
-                shader.p_obj = glGetUniformLocation(shader.plain, "object");
-                shader.p_color = glGetUniformLocation(shader.plain, "color");
-                shader.i_obj = glGetUniformLocation(shader.image, "object");
-                shader.i_color = glGetUniformLocation(shader.image, "color");
-                shader.ubo = buffers[1];
+                GLuint fc = compile(GL_FRAGMENT_SHADER,
+                    "#version " VERSION "\n"
+                    "precision mediump float;"
+
+                    "uniform vec4 color;"
+                    "in vec2 pos;"
+                    "out vec4 frag;"
+
+                    "void main() {"
+                        "frag = length(pos) < .5 ? color : vec4(0);"
+                    "}");
+
+                GLuint ft = compile(GL_FRAGMENT_SHADER,
+                    "#version " VERSION "\n"
+                    "precision mediump float;"
+
+                    "uniform sampler2D sampler;"
+                    "uniform vec4 color;"
+
+                    "in vec2 pos;"
+                    "out vec4 frag;"
+
+                    "void main() {"
+                        "float dist = texture(sampler, pos).r;"
+                        "float width = fwidth(dist);"
+
+                        "frag = color * vec4(1, 1, 1, smoothstep(.5 - width, .5 + width, dist));"
+                    "}");
+
+                create(&shader.plain, vn, fn);
+                create(&shader.image, vi, fi);
+                create(&shader.circle, vn, fc);
+                create(&shader.text, vi, ft);
+
+                glDeleteShader(vn);
+                glDeleteShader(fn);
+                glDeleteShader(vi);
+                glDeleteShader(fi);
+                glDeleteShader(fc);
+                glDeleteShader(ft);
+
+                glGenVertexArrays(1, &shader.vao);
+                glGenBuffers(2, buffers);
 
                 glBindVertexArray(shader.vao);
                 glBindBuffer(GL_ARRAY_BUFFER, buffers[0]);
@@ -630,10 +692,13 @@ static int module_exec(PyObject *self) {
                 glBindVertexArray(0);
                 glDeleteBuffers(1, &buffers[0]);
 
-                glBindBuffer(GL_UNIFORM_BUFFER, shader.ubo);
+                glBindBuffer(GL_UNIFORM_BUFFER, shader.ubo = buffers[1]);
                 glBufferData(GL_UNIFORM_BUFFER, 48, NULL, GL_DYNAMIC_DRAW);
                 glBindBufferBase(GL_UNIFORM_BUFFER, 0, shader.ubo);
+
                 glActiveTexture(GL_TEXTURE0);
+                glEnable(GL_BLEND);
+                glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
                 return PyModule_AddFunctions(program, module_methods);
 
@@ -657,8 +722,6 @@ static int module_traverse(PyObject *self, visitproc visit, void *arg) {
 
     Py_VISIT(program);
     Py_VISIT(error);
-
-    printf("TRAVERSE END\n");
 
     return 0;
 }
@@ -686,11 +749,25 @@ static void module_free(void *closure) {
         free(this);
     }
 
+    // while (fonts) {
+    //     Font *this = fonts;
+
+    //     fonts = this -> next;
+    //     FT_Done_Face(this -> face);
+
+    //     free(this -> name);
+    //     free(this);
+    // }
+
     glDeleteVertexArrays(1, &shader.vao);
     glDeleteBuffers(1, &shader.ubo);
-    glDeleteProgram(shader.plain);
-    glDeleteProgram(shader.image);
 
+    glDeleteProgram(shader.plain.src);
+    glDeleteProgram(shader.image.src);
+    glDeleteProgram(shader.circle.src);
+    glDeleteProgram(shader.text.src);
+
+    // FT_Done_FreeType(library);
     SDL_GL_DestroyContext(window.ctx);
     SDL_DestroyWindow(window.sdl);
     SDL_Quit();

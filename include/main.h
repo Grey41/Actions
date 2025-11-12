@@ -5,8 +5,6 @@
 #define MIN(a, b) (a<b?a:b)
 #define MAX(a, b) (a>b?a:b)
 #define LEN(e) sizeof e/sizeof*e
-
-#define PY_SSIZE_T_CLEAN
 #define _USE_MATH_DEFINES
 
 #ifdef __EMSCRIPTEN__
@@ -22,6 +20,7 @@
 #include <SDL3/SDL.h>
 #include <tesselator.h>
 #include <stb_image.h>
+#include <stb_truetype.h>
 
 enum {x, y, z, w};
 enum {r, g, b, a};
@@ -39,7 +38,12 @@ typedef struct Shape Shape;
 typedef struct Points Points;
 typedef struct Line Line;
 typedef struct Texture Texture;
+typedef struct Font Font;
 typedef struct Image Image;
+typedef struct Circle Circle;
+typedef struct Text Text;
+typedef struct Glyph Glyph;
+typedef struct Entry Entry;
 
 struct Vec2 {
     double x;
@@ -98,9 +102,34 @@ struct Texture {
     GLuint src;
 };
 
+struct Font {
+    Font *next;
+    char *name;
+    stbtt_fontinfo info;
+    GLuint atlas;
+    Entry chars[95]
+};
+
 struct Image {
     Rect base;
     Texture *src;
+};
+
+struct Text {
+    Rect base;
+    // Vec2 scale;
+    char *content;
+    size_t len;
+    Font *src;
+    GLuint vao;
+    GLuint vbo;
+    double size;
+    double width;
+};
+
+struct Circle {
+    Base base;
+    double radius;
 };
 
 struct Vector {
@@ -132,6 +161,12 @@ struct Button {
     Key *key;
 };
 
+struct Program {
+    GLuint src;
+    GLint obj;
+    GLint color;
+};
+
 extern struct Window {
     SDL_Window *sdl;
     SDL_GLContext ctx;
@@ -161,18 +196,18 @@ extern struct Keyboard {
 } keyboard;
 
 extern struct Shader {
-    GLuint plain;
-    GLuint image;
+    struct Program plain;
+    struct Program image;
+    struct Program circle;
+    struct Program text;
     GLuint ubo;
     GLuint vao;
-    GLint p_obj;
-    GLint p_color;
-    GLint i_obj;
-    GLint i_color;
 } shader;
 
+// extern FT_Library library;
 extern PyObject *program;
 extern Texture *textures;
+extern Font *fonts;
 
 extern PyTypeObject VectorType;
 extern PyTypeObject WindowType;
@@ -187,6 +222,8 @@ extern PyTypeObject ShapeType;
 extern PyTypeObject PointsType;
 extern PyTypeObject LineType;
 extern PyTypeObject ImageType;
+extern PyTypeObject CircleType;
+extern PyTypeObject TextType;
 
 extern Vector *vector_new(PyObject *, double *, uint8_t, int (*)(PyObject *));
 extern Points *points_new(Shape *, int (*)(Shape *));

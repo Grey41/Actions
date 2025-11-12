@@ -1,10 +1,10 @@
-import subprocess, sysconfig, pathlib, sys, zipfile, hashlib, base64, shutil, os, glob
+import subprocess, sysconfig, pathlib, sys, zipfile, hashlib, base64, shutil, os
 
 VERSION = "3.1"
 
 def build_wheel(wheel_directory, config_settings = None, metadata_directory = None):
     def write(src, path):
-        file.write(src, "JoBase/" + path)
+        file.write(src, pathlib.Path("JoBase") / path)
 
         hash = hashlib.sha256()
         item = open(src, "rb")
@@ -33,7 +33,8 @@ def build_wheel(wheel_directory, config_settings = None, metadata_directory = No
     out = "__init__" + ext
 
     lines = []
-    source = glob.glob("src/*.c") + glob.glob("libtess2/Source/*.c")
+    source = list(pathlib.Path("src").glob("*.c")) + list(pathlib.Path("libtess2/Source").glob("*.c"))
+    arch = [] if sys.maxsize > 2 ** 32 else ["-A", "Win32"]
 
     if not pathlib.Path("sdl/build").exists():
         if sys.platform == "linux":
@@ -44,8 +45,7 @@ def build_wheel(wheel_directory, config_settings = None, metadata_directory = No
                 subprocess.run(["dnf", "install", "-y", "libxkbcommon-devel", "wayland-devel", "wayland-protocols-devel", "mesa-libEGL-devel"])
 
         subprocess.run([
-            "cmake", "-S", "sdl", "-B", "sdl/build",
-            *([] if sys.maxsize > 2 ** 32 else ["-A", "Win32"]),
+            "cmake", "-S", "sdl", "-B", "sdl/build", *arch,
             "-DBUILD_SHARED_LIBS=OFF",
             "-DSDL_SHARED=OFF",
             "-DCMAKE_OSX_ARCHITECTURES=x86_64;arm64",
@@ -64,11 +64,27 @@ def build_wheel(wheel_directory, config_settings = None, metadata_directory = No
 
         subprocess.run(["cmake", "--build", "sdl/build", "--config", "Release"])
 
+    if not pathlib.Path("freetype/build").exists():
+        subprocess.run([
+            "cmake", "-S", "freetype", "-B", "freetype/build", *arch,
+            "-DBUILD_SHARED_LIBS=OFF",
+            "-DCMAKE_OSX_ARCHITECTURES=x86_64;arm64",
+            "-DCMAKE_OSX_DEPLOYMENT_TARGET=10.13",
+            "-DCMAKE_POSITION_INDEPENDENT_CODE=ON",
+            "-DFT_DISABLE_PNG=ON",
+            "-DFT_DISABLE_BROTLI=ON"
+        ])
+
+        subprocess.run(["cmake", "--build", "freetype/build", "--config", "Release"])
+
     subprocess.run([
         "cl", *source,
         "/Fodist\\", "/LD", "/MD",
-        "/I", include, "/I", "include", "/I", "libtess2\\Include", "/I", "sdl\\include", "/I", "stb",
-        "/link", "/LIBPATH:sdl\\build\\Release", "SDL3-static.lib",
+        "/I", include, "/I", "include", "/I", "stb",
+        "/I", "libtess2\\Include", "/I", "sdl\\include", "/I", "freetype\\include",
+        "/link",
+        "/LIBPATH:sdl\\build\\Release", "SDL3-static.lib",
+        "/LIBPATH:freetype\\build\\Release", "freetype.lib",
         "/LIBPATH:" + sysconfig.get_config_var("LIBDIR"),
         "user32.lib", "winmm.lib", "advapi32.lib", "ole32.lib", "gdi32.lib",
         "shell32.lib", "setupapi.lib", "version.lib", "imm32.lib",
@@ -81,13 +97,17 @@ def build_wheel(wheel_directory, config_settings = None, metadata_directory = No
         "-g0", "-Wstrict-prototypes"
     ] if sys.platform == "darwin" else []),
         *source,
-        "-I" + include, "-Iinclude", "-Ilibtess2/Include", "-Isdl/include", "-Istb",
-        "-Lsdl/build", "-lSDL3", "-fPIC",
+        "-I" + include, "-Iinclude", "-Istb",
+        "-Ilibtess2/Include", "-Isdl/include", "-Ifreetype/include",
+        "-Lsdl/build", "-Lfreetype/build",
+        "-lSDL3", "-lfreetype", "-lz", "-lbz2",
+        "-fPIC",
         "-o", pathlib.Path(wheel_directory) / out
     ])
 
-    write(pathlib.Path(wheel_directory) / out, out)
-    write("module/__init__.pyi", "__init__.pyi")
+    for path in pathlib.Path("module").rglob("*"):
+        if path.suffix in (".pyi", ".png", ".ttf"):
+            write(path, pathlib.Path(*path.parts[1:]))
 
     writestr(f"JoBase-{VERSION}.dist-info/METADATA", [
         "Metadata-Version: 2.1",
@@ -107,6 +127,7 @@ def build_wheel(wheel_directory, config_settings = None, metadata_directory = No
         "Tag: " + tag
     ])
 
+    write(pathlib.Path(wheel_directory) / out, out)
     lines.append(f"JoBase-{VERSION}.dist-info/RECORD,,")
     file.writestr(f"JoBase-{VERSION}.dist-info/RECORD", "\n".join(lines))
 
