@@ -217,13 +217,20 @@ class Image(Rect):
 
     name: str
 
-class Text(Rect):
-    def __init__(self) -> None: ...
+class Text(Base):
+    def __init__(self, content = "Text", x = 0, y = 0, size = 50, angle = 0, color = (0, 0, 0, 1), font = DEFAULT) -> None: ...
+
+    @property
+    def width(self) -> float: ...
+
+    size: float
+    content: str
+    font: int
 
 class Circle(Base):
     def __init__(self, x = 0, y = 0, radius = 25, color = (0, 0, 0, 1)) -> None: ...
 
-    radius: float
+    diameter: float
 
 def run() -> None: ...
 
@@ -233,9 +240,39 @@ camera: Camera
 key: Key
 
 MAN: str
+DEFAULT = 0
+CODE = 1
+
+WHITE = 1, 1, 1
+BLACK = 0, 0, 0
+GRAY = .5, .5, .5
+DARK_GRAY = .2, .2, .2
+LIGHT_GRAY = .8, .8, .8
+BROWN = .6, .2, .2
+TAN = .8, .7, .6
+RED = 1, 0, 0
+DARK_RED = .6, 0, 0
+SALMON = 1, .5, .5
+ORANGE = 1, .5, 0
+GOLD = 1, .8, 0
+YELLOW = 1, 1, 0
+OLIVE = .5, .5, 0
+LIME = 0, 1, 0
+DARK_GREEN = 0, .4, 0
+GREEN = 0, .5, 0
+AQUA = 0, 1, 1
+BLUE = 0, 0, 1
+LIGHT_BLUE = .5, .8, 1
+AZURE = .9, 1, 1
+NAVY = 0, 0, .5
+PURPLE = .5, 0, 1
+PINK = 1, .75, .8
+MAGENTA = 1, 0, 1
 
 __all__ = [
     "window", "mouse", "camera", "key", "run",
     "Rect", "Shape", "Line", "Image", "Circle", "Text"
-    "MAN"
+    "MAN", "DEFAULT", "CODE",
+    "WHITE", "BLACK", "GRAY", "DARK_GRAY", "LIGHT_GRAY", "BROWN", "TAN", "RED", "DARK_RED", "SALMON", "ORANGE", "GOLD", "YELLOW",
+    "OLIVE", "LIME", "DARK_GREEN", "GREEN", "AQUA", "BLUE", "LIGHT_BLUE", "AZURE", "NAVY", "PURPLE", "PINK", "MAGENTA",
 ]

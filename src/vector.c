@@ -172,19 +172,17 @@ static PyObject *vector_getattro(Vector *self, PyObject *attr) {
 
 static int vector_setattro(Vector *self, PyObject *attr, PyObject *value) {
     Py_ssize_t size;
+
     const char *name = PyUnicode_AsUTF8AndSize(attr, &size);
+    INIT(!name);
 
-    if (name) {
-        for (uint8_t i = 0; i < self -> size && size < 2; i ++)
-            if (*name == self -> names[i])
-                return value ?
-                    ERR(self -> var[i] = PyFloat_AsDouble(value)) ? -1 : self -> set ? self -> set(self -> parent) :
-                    0 : (PyErr_Format(PyExc_AttributeError, "Cannot delete the %c attribute", *name), -1);
+    for (uint8_t i = 0; i < self -> size && size < 2; i ++)
+        if (*name == self -> names[i])
+            return value ?
+                ERR(self -> var[i] = PyFloat_AsDouble(value)) ? -1 : self -> set ? self -> set(self -> parent) :
+                0 : (PyErr_Format(PyExc_AttributeError, "Cannot delete the '%c' attribute", *name), -1);
 
-        return PyObject_GenericSetAttr((PyObject *) self, attr, value);
-    }
-
-    return -1;
+    return PyObject_GenericSetAttr((PyObject *) self, attr, value);
 }
 
 static Py_ssize_t vector_len(Vector *self) {

@@ -4,8 +4,11 @@ static int create(Shape *self) {
     if (self -> len < 3)
         return PyErr_SetString(PyExc_ValueError, "Shape must contain a minimum of 3 points"), -1;
 
-    TESStesselator *tess = tessNewTess(NULL);
     TESSreal *points = malloc(self -> len * sizeof(TESSreal) * 2);
+    TESStesselator *tess;
+
+    if (!points || !(tess = tessNewTess(NULL)))
+        return PyErr_NoMemory(), -1;
 
     for (size_t i = 0; i < self -> len; i ++) {
         points[i * 2] = self -> data[i].x;
@@ -58,7 +61,6 @@ static Shape *shape_new(PyTypeObject *type, PyObject *args, PyObject *kwds) {
 
         glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, 0);
         glEnableVertexAttribArray(0);
-        glBindVertexArray(0);
     }
 
     return self;
@@ -88,7 +90,10 @@ static int shape_init(Shape *self, PyObject *args, PyObject *kwds) {
 
     if (!points) {
         self -> len = 3;
-        self -> data = PyMem_Realloc(self -> data, self -> len * sizeof(Vec2));
+        self -> data = realloc(self -> data, self -> len * sizeof(Vec2));
+
+        if (!self -> data)
+            return PyErr_NoMemory(), -1;
 
         self -> data[0].x = 0;
         self -> data[0].y = self -> data[1].x = 25;
@@ -99,14 +104,12 @@ static int shape_init(Shape *self, PyObject *args, PyObject *kwds) {
 }
 
 static void shape_dealloc(Shape *self) {
-    printf("hello\n");
-
     GLuint buffers[] = {self -> vbo, self -> ibo};
 
     glDeleteBuffers(2, buffers);
     glDeleteVertexArrays(1, &self -> vao);
 
-    PyMem_Free(self -> data);
+    free(self -> data);
     Py_TYPE(self) -> tp_free(self);
 }
 

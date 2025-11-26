@@ -77,6 +77,7 @@ PyTypeObject RectType = {
     .tp_doc = "Render rectangles on the screen",
     .tp_basicsize = sizeof(Rect),
     .tp_flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
+    .tp_new = PyType_GenericNew,
     .tp_base = &BaseType,
     .tp_init = (initproc) rect_init,
     .tp_getset = rect_getset,

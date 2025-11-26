@@ -6,31 +6,38 @@ static int load(Image *self, const char *name) {
         if (!strcmp(this -> name, name))
             return self -> src = this, 0;
 
-    int width, height;
-    stbi_uc *image = stbi_load(name, &width, &height, 0, STBI_rgb_alpha);
-
-    if (!image)
-        return PyErr_Format(PyExc_FileNotFoundError, "Failed to load image '%s', %s", name, stbi_failure_reason()), -1;
-
     Texture *texture = malloc(sizeof(Texture));
 
-    glGenTextures(1, &texture -> src);
-    glBindTexture(GL_TEXTURE_2D, texture -> src);
+    if (texture) {
+        if ((texture -> name = strdup(name))) {
+            texture -> next = textures;
+            textures = self -> src = texture;
 
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            int width, height;
+            stbi_uc *image = stbi_load(name, &width, &height, 0, STBI_rgb_alpha);
 
-    texture -> next = textures;
-    texture -> width = width;
-    texture -> height = height;
+            if (!image)
+                return PyErr_Format(PyExc_FileNotFoundError, "Failed to load image '%s', %s", name, stbi_failure_reason()), -1;
 
-    texture -> name = strdup(name);
-    textures = self -> src = texture;
+            glGenTextures(1, &texture -> src);
+            glBindTexture(GL_TEXTURE_2D, texture -> src);
 
-    return stbi_image_free(image), 0;
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+            texture -> width = width;
+            texture -> height = height;
+
+            return 0;
+        }
+
+        free(texture);
+    }
+
+    return PyErr_NoMemory(), -1;
 }
 
 static PyObject *image_get_name(Image *self, void *closure) {
@@ -64,11 +71,9 @@ static int image_init(Image *self, PyObject *args, PyObject *kwds) {
     static char *kwlist[] = {"name", "x", "y", "angle", "width", "height", "color", NULL};
 
     PyObject *color = NULL;
-    PyObject *src = PyObject_GetAttrString(program, "MAN");
+    const char *name = NULL;
 
-    INIT(!src)
     BaseType.tp_init((PyObject *) self, NULL, NULL);
-
     self -> base.size.x = 0;
     self -> base.size.y = 0;
 
@@ -76,18 +81,20 @@ static int image_init(Image *self, PyObject *args, PyObject *kwds) {
     self -> base.base.color.y = 1;
     self -> base.base.color.z = 1;
 
-    const char *name = PyUnicode_AsUTF8(src);
-
-    if (!name || !PyArg_ParseTupleAndKeywords(
+    INIT(!PyArg_ParseTupleAndKeywords(
         args, kwds, "|sdddddO:Image", kwlist,
         &name, &self -> base.base.pos.x,
         &self -> base.base.pos.y,
         &self -> base.base.angle,
         &self -> base.size.x,
-        &self -> base.size.y,
-        &color) || load(self, name)) return Py_DECREF(src), -1;
+        &self -> base.size.y, &color));
 
-    Py_DECREF(src);
+    if (!name) {
+        sprintf(path.src + path.size, "images/man.png");
+        name = path.src;
+    }
+
+    INIT(load(self, name))
 
     self -> base.size.x = self -> base.size.x ? self -> base.size.x : self -> src -> width;
     self -> base.size.y = self -> base.size.y ? self -> base.size.y : self -> src -> height;

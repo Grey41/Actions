@@ -26,7 +26,7 @@ static PyObject *print(Points *self, char left, char right) {
         return free(buffer), res;
     }
 
-    return NULL;
+    return PyErr_NoMemory();
 }
 
 static PyObject *points_str(Points *self) {
@@ -84,7 +84,12 @@ int points_set(PyObject *value, Shape *shape) {
         INIT(!list)
 
         shape -> len = PySequence_Fast_GET_SIZE(list);
-        shape -> data = PyMem_Realloc(shape -> data, shape -> len * sizeof(Vec2));
+        shape -> data = realloc(shape -> data, shape -> len * sizeof(Vec2));
+
+        if (!shape -> data) {
+            Py_DECREF(list);
+            return PyErr_NoMemory(), -1;
+        }
 
         for (size_t i = 0; i < shape -> len; i ++)
             INIT(vector_set(PySequence_Fast_GET_ITEM(list, i), (double *) &shape -> data[i], 2));

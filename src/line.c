@@ -1,6 +1,6 @@
 #include "main.h"
 
-static Vec2 norm(double x, double y) {
+static inline Vec2 norm(double x, double y) {
     const double len = hypot(x, y);
     Vec2 value = {len ? x / len : 0, len ? y / len : 0};
 
@@ -8,12 +8,16 @@ static Vec2 norm(double x, double y) {
 }
 
 static int create(Line *self) {
+    size_t vtx = 0, idx = 0;
+
     if (self -> base.len < 2)
         return PyErr_SetString(PyExc_ValueError, "Line must contain a minimum of 2 points"), -1;
 
     GLfloat *verts = malloc(((self -> base.len - !self -> loop) * 10 + 4 * !self -> loop) * sizeof(GLfloat));
-    GLuint *index = malloc((self -> base.len - !self -> loop) * 9 * sizeof(GLuint));
-    size_t vtx = 0, idx = 0;
+    GLuint *index;
+
+    if (!verts || !(index = malloc((self -> base.len - !self -> loop) * 9 * sizeof(GLuint))))
+        return PyErr_NoMemory(), -1;
 
     for (size_t i = 0; i < self -> base.len; i ++) {
         const Vec2 pos = self -> base.data[i];
@@ -44,7 +48,6 @@ static int create(Line *self) {
         const Vec2 ab = norm(pos.x - px, pos.y - py);
         const Vec2 bc = norm(nx - pos.x, ny - pos.y);
         const Vec2 tan = norm(ab.x + bc.x, ab.y + bc.y);
-        // const Vec2 point = norm(ab.x - bc.x, ab.y - bc.y);
 
         const double mx = -tan.y, my = tan.x, dx = -ab.y, dy = ab.x;
         const bool inside = mx * (ab.x - bc.x) + my * (ab.y - bc.y) > 0;
@@ -102,7 +105,6 @@ static int create(Line *self) {
     glBindVertexArray(self -> base.vao);
     glBufferData(GL_ARRAY_BUFFER, vtx * sizeof(GLfloat), verts, GL_STATIC_DRAW);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, idx * sizeof(GLuint), index, GL_STATIC_DRAW);
-    glBindVertexArray(0);
 
     free(verts);
     free(index);
@@ -170,7 +172,10 @@ static int line_init(Line *self, PyObject *args, PyObject *kwds) {
 
     if (!points) {
         self -> base.len = 2;
-        self -> base.data = PyMem_Realloc(self -> base.data, self -> base.len * sizeof(Vec2));
+        self -> base.data = realloc(self -> base.data, self -> base.len * sizeof(Vec2));
+
+        if (!self -> base.data)
+            return PyErr_NoMemory(), -1;
 
         self -> base.data[0].x = self -> base.data[0].y = -25;
         self -> base.data[1].x = self -> base.data[1].y = 25;

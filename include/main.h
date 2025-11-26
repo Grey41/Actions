@@ -5,6 +5,7 @@
 #define MIN(a, b) (a<b?a:b)
 #define MAX(a, b) (a>b?a:b)
 #define LEN(e) sizeof e/sizeof*e
+// #define RANGE 560
 #define _USE_MATH_DEFINES
 
 #ifdef __EMSCRIPTEN__
@@ -28,6 +29,8 @@ enum {r, g, b, a};
 typedef struct Vec2 Vec2;
 typedef struct Vec3 Vec3;
 typedef struct Vec4 Vec4;
+typedef struct Glyph Glyph;
+// typedef struct Entry Entry;
 typedef struct Vector Vector;
 typedef struct Base Base;
 typedef struct Button Button;
@@ -42,8 +45,6 @@ typedef struct Font Font;
 typedef struct Image Image;
 typedef struct Circle Circle;
 typedef struct Text Text;
-typedef struct Glyph Glyph;
-typedef struct Entry Entry;
 
 struct Vec2 {
     double x;
@@ -102,12 +103,26 @@ struct Texture {
     GLuint src;
 };
 
+struct Glyph {
+    uint32_t code;
+    uint32_t jump;
+    float adv;
+    float x0;
+    float y0;
+    float x1;
+    float y1;
+    float s0;
+    float t0;
+    float s1;
+    float t1;
+};
+
 struct Font {
     Font *next;
-    char *name;
-    stbtt_fontinfo info;
-    GLuint atlas;
-    Entry chars[95]
+    uint8_t id;
+    GLuint src;
+    Glyph *chars;
+    uint32_t len;
 };
 
 struct Image {
@@ -116,9 +131,8 @@ struct Image {
 };
 
 struct Text {
-    Rect base;
-    // Vec2 scale;
-    char *content;
+    Base base;
+    wchar_t *content;
     size_t len;
     Font *src;
     GLuint vao;
@@ -129,7 +143,7 @@ struct Text {
 
 struct Circle {
     Base base;
-    double radius;
+    double diameter;
 };
 
 struct Vector {
@@ -183,8 +197,11 @@ extern struct Camera {
 
 extern struct Mouse {
     Vec2 pos;
+    Vec2 move;
     Button *button;
     uint8_t len;
+    bool press;
+    bool release;
 } mouse;
 
 extern struct Keyboard {
@@ -193,6 +210,8 @@ extern struct Keyboard {
     PyObject map;
     uint16_t keys;
     uint8_t mods;
+    bool press;
+    bool release;
 } keyboard;
 
 extern struct Shader {
@@ -204,7 +223,12 @@ extern struct Shader {
     GLuint vao;
 } shader;
 
-// extern FT_Library library;
+extern struct Path {
+    char *src;
+    size_t size;
+} path;
+
+extern PyObject *error;
 extern PyObject *program;
 extern Texture *textures;
 extern Font *fonts;
@@ -232,7 +256,3 @@ extern void base_matrix(Base *, GLint, GLint, double, double);
 extern int button_compare(const char *, Button *);
 extern int vector_set(PyObject *, double *, uint8_t);
 extern int points_set(PyObject *, Shape *);
-
-extern int window_clear(void);
-extern int window_size(void);
-extern int mouse_pos(void);

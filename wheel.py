@@ -64,19 +64,6 @@ def build_wheel(wheel_directory, config_settings = None, metadata_directory = No
 
         subprocess.run(["cmake", "--build", "sdl/build", "--config", "Release"])
 
-    if not pathlib.Path("freetype/build").exists():
-        subprocess.run([
-            "cmake", "-S", "freetype", "-B", "freetype/build", *arch,
-            "-DBUILD_SHARED_LIBS=OFF",
-            "-DCMAKE_OSX_ARCHITECTURES=x86_64;arm64",
-            "-DCMAKE_OSX_DEPLOYMENT_TARGET=10.13",
-            "-DCMAKE_POSITION_INDEPENDENT_CODE=ON",
-            "-DFT_DISABLE_PNG=ON",
-            "-DFT_DISABLE_BROTLI=ON"
-        ])
-
-        subprocess.run(["cmake", "--build", "freetype/build", "--config", "Release"])
-
     subprocess.run([
         "cl", *source,
         "/Fodist\\", "/LD", "/MD",
@@ -84,7 +71,6 @@ def build_wheel(wheel_directory, config_settings = None, metadata_directory = No
         "/I", "libtess2\\Include", "/I", "sdl\\include", "/I", "freetype\\include",
         "/link",
         "/LIBPATH:sdl\\build\\Release", "SDL3-static.lib",
-        "/LIBPATH:freetype\\build\\Release", "freetype.lib",
         "/LIBPATH:" + sysconfig.get_config_var("LIBDIR"),
         "user32.lib", "winmm.lib", "advapi32.lib", "ole32.lib", "gdi32.lib",
         "shell32.lib", "setupapi.lib", "version.lib", "imm32.lib",
@@ -94,19 +80,19 @@ def build_wheel(wheel_directory, config_settings = None, metadata_directory = No
         "-framework", "GameController",
         "-framework", "ForceFeedback",
         "-framework", "AppKit",
-        "-g0", "-Wstrict-prototypes"
+        "-g0",
+        "-Wstrict-prototypes", "-Wsign-compare"
     ] if sys.platform == "darwin" else []),
         *source,
         "-I" + include, "-Iinclude", "-Istb",
-        "-Ilibtess2/Include", "-Isdl/include", "-Ifreetype/include",
-        "-Lsdl/build", "-Lfreetype/build",
-        "-lSDL3", "-lfreetype", "-lz", "-lbz2",
+        "-Ilibtess2/Include", "-Isdl/include",
+        "-Lsdl/build", "-lSDL3",
         "-fPIC",
         "-o", pathlib.Path(wheel_directory) / out
     ])
 
     for path in pathlib.Path("module").rglob("*"):
-        if path.suffix in (".pyi", ".png", ".ttf"):
+        if path.suffix in (".pyi", ".png", ".ttf", ".bin"):
             write(path, pathlib.Path(*path.parts[1:]))
 
     writestr(f"JoBase-{VERSION}.dist-info/METADATA", [
