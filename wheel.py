@@ -34,7 +34,7 @@ def build_wheel(wheel_directory, config_settings = None, metadata_directory = No
 
     lines = []
     source = list(pathlib.Path("src").glob("*.c")) + list(pathlib.Path("libtess2/Source").glob("*.c"))
-    arch = [] if sys.maxsize > 2 ** 32 else ["-A", "Win32"]
+    arch = [] if sys.maxsize > 2 ** 32 and sys.platform != "win32" else ["-A", "Win32"]
 
     if not pathlib.Path("sdl/build").exists():
         if sys.platform == "linux":
