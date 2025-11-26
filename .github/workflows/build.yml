@@ -31,9 +31,10 @@ jobs:
           done
 
       - name: Upload wheels
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           path: dist/*.whl
+          overwrite: true
 
   windows:
     name: Windows ${{matrix.arch[0]}}
@@ -74,9 +75,10 @@ jobs:
           }
 
       - name: Upload wheels
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           path: dist/*.whl
+          overwrite: true
 
   linux:
     name: Linux ${{matrix.arch[0]}}
@@ -120,6 +122,7 @@ jobs:
             done'
 
       - name: Upload wheels
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           path: dist/*.whl
+          overwrite: true
