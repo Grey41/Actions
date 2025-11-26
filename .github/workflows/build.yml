@@ -66,7 +66,7 @@ jobs:
 
             dir python/$py
 
-            $exe = Get-ChildItem -Path . -Filter "python*.exe" | Select-Object -First 1
+            $exe = Get-ChildItem -Path python/$py -Filter "python*.exe" | Select-Object -First 1
             echo $exe.FullName
 
             & $exe.FullName -m pip install build
