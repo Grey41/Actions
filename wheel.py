@@ -99,7 +99,7 @@ def build_wheel(wheel_directory, config_settings = None, metadata_directory = No
     subprocess.run(["dir", "lib\\sdl\\build\\Release"])
 
     print(" ".join([
-        "cl", *source,
+        "cl", *(str(e) for e in source),
         "/LD", "/MD",
         "/I", include, "/I", "include", "/I", "lib\\stb",
         "/I", "lib\\libtess2\\Include", "/I", "lib\\sdl\\include", "/I", "lib\\mix\\include",
