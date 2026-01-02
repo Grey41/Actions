@@ -31,10 +31,9 @@ jobs:
           done
 
       - name: Upload wheels
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v3
         with:
           path: dist/*.whl
-          overwrite: true
 
   windows:
     name: Windows ${{matrix.arch[0]}}
@@ -65,20 +64,15 @@ jobs:
             curl -L -o python.zip https://www.python.org/ftp/python/$dir/python-$py-${{matrix.arch[1]}}.zip
             Expand-Archive python.zip -DestinationPath python/$py -Force
 
-            dir python/$py
-
             $exe = Get-ChildItem -Path python/$py -Filter "python*.exe" | Select-Object -First 1
-            echo $exe.FullName
-
             & $exe.FullName -m pip install build
             & $exe.FullName -m build --wheel
           }
 
       - name: Upload wheels
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v3
         with:
           path: dist/*.whl
-          overwrite: true
 
   linux:
     name: Linux ${{matrix.arch[0]}}
@@ -122,7 +116,6 @@ jobs:
             done'
 
       - name: Upload wheels
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v3
         with:
           path: dist/*.whl
-          overwrite: true

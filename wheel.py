@@ -26,6 +26,10 @@ def build_wheel(wheel_directory, config_settings = None, metadata_directory = No
         code = base64.urlsafe_b64encode(hash.digest()).rstrip(b"=").decode("ascii")
         lines.append(f"{path},sha256={code},{len(bytes)}")
 
+    def clone(url, name):
+        if not pathlib.Path("lib/" + name).exists():
+            subprocess.run(["git", "clone", f"https://github.com/{url}.git", "lib/" + name, "--depth", "1"])
+
     build, flags, include, ext, ver, abi = sysconfig.get_config_vars("BLDSHARED", "OPT", "INCLUDEPY", "EXT_SUFFIX", "py_version_nodot", "abiflags")
     tag = f"cp{ver}-cp{ver}{abi}-{os.environ.get("PLAT", sysconfig.get_platform().replace("-", "_").replace(".", "_"))}"
     wheel = f"JoBase-{VERSION}-{tag}.whl"
@@ -33,10 +37,15 @@ def build_wheel(wheel_directory, config_settings = None, metadata_directory = No
     out = "__init__" + ext
 
     lines = []
-    source = list(pathlib.Path("src").glob("*.c")) + list(pathlib.Path("libtess2/Source").glob("*.c"))
+    source = list(pathlib.Path("src").glob("*.c")) + list(pathlib.Path("lib/libtess2/Source").glob("*.c"))
     arch = [] if sys.maxsize > 2 ** 32 or sys.platform != "win32" else ["-A", "Win32"]
 
-    if not pathlib.Path("sdl/build").exists():
+    clone("memononen/libtess2", "libtess2")
+    clone("libsdl-org/SDL_mixer", "mix")
+    clone("nothings/stb", "stb")
+    clone("JoBase/SDL", "sdl")
+
+    if not pathlib.Path("lib/sdl/build").exists():
         if sys.platform == "linux":
             if shutil.which("apk"):
                 subprocess.run(["apk", "add", "--no-cache", "libxkbcommon-dev", "wayland-dev", "wayland-protocols", "mesa-dev", "libdrm-dev"])
@@ -45,13 +54,13 @@ def build_wheel(wheel_directory, config_settings = None, metadata_directory = No
                 subprocess.run(["dnf", "install", "-y", "libxkbcommon-devel", "wayland-devel", "wayland-protocols-devel", "mesa-libEGL-devel"])
 
         subprocess.run([
-            "cmake", "-S", "sdl", "-B", "sdl/build", *arch,
+            "cmake", "-S", "lib/sdl", "-B", "lib/sdl/build", *arch,
             "-DBUILD_SHARED_LIBS=OFF",
             "-DSDL_SHARED=OFF",
             "-DCMAKE_OSX_ARCHITECTURES=x86_64;arm64",
             "-DCMAKE_OSX_DEPLOYMENT_TARGET=10.13",
             "-DCMAKE_POSITION_INDEPENDENT_CODE=ON",
-            "-DSDL_AUDIO=OFF",
+            "-DSDL_TESTS=OFF",
             "-DSDL_CAMERA=OFF",
             "-DSDL_JOYSTICK=OFF",
             "-DSDL_HAPTIC=OFF",
@@ -62,15 +71,27 @@ def build_wheel(wheel_directory, config_settings = None, metadata_directory = No
             "-DSDL_X11=OFF"
         ])
 
-        subprocess.run(["cmake", "--build", "sdl/build", "--config", "Release"])
+        subprocess.run(["cmake", "--build", "lib/sdl/build", "--config", "Release", "--target", "install"])
+
+    if not pathlib.Path("lib/mix/build").exists():
+        subprocess.run([
+            "cmake", "-S", "lib/mix", "-B", "lib/mix/build", *arch,
+            "-DBUILD_SHARED_LIBS=OFF",
+            "-DCMAKE_OSX_ARCHITECTURES=x86_64;arm64",
+            "-DCMAKE_OSX_DEPLOYMENT_TARGET=10.13",
+            "-DCMAKE_POSITION_INDEPENDENT_CODE=ON",
+            "-DCMAKE_PREFIX_PATH=/opt/homebrew"
+        ])
+
+        subprocess.run(["cmake", "--build", "lib/mix/build", "--config", "Release"])
 
     subprocess.run([
         "cl", *source,
         "/Fodist\\", "/LD", "/MD",
-        "/I", include, "/I", "include", "/I", "stb",
-        "/I", "libtess2\\Include", "/I", "sdl\\include", "/I", "freetype\\include",
+        "/I", include, "/I", "include", "/I", "lib\\stb",
+        "/I", "lib\\libtess2\\Include", "/I", "lib\\sdl\\include", "/I", "lib\\mix\\include",
         "/link",
-        "/LIBPATH:sdl\\build\\Release", "SDL3-static.lib",
+        "/LIBPATH:lib\\sdl\\build\\Release", "SDL3-static.lib",
         "/LIBPATH:" + sysconfig.get_config_var("LIBDIR"),
         "user32.lib", "winmm.lib", "advapi32.lib", "ole32.lib", "gdi32.lib",
         "shell32.lib", "setupapi.lib", "version.lib", "imm32.lib",
@@ -84,15 +105,15 @@ def build_wheel(wheel_directory, config_settings = None, metadata_directory = No
         "-Wstrict-prototypes", "-Wsign-compare"
     ] if sys.platform == "darwin" else []),
         *source,
-        "-I" + include, "-Iinclude", "-Istb",
-        "-Ilibtess2/Include", "-Isdl/include",
-        "-Lsdl/build", "-lSDL3",
+        "-I" + include, "-Iinclude", "-Ilib/stb",
+        "-Ilib/libtess2/Include", "-Ilib/sdl/include", "-Ilib/mix/include",
+        "-Llib/sdl/build", "-lSDL3", "-Llib/mix/build", "-lSDL3_mixer",
         "-fPIC",
         "-o", pathlib.Path(wheel_directory) / out
     ])
 
     for path in pathlib.Path("module").rglob("*"):
-        if path.suffix in (".pyi", ".png", ".ttf", ".bin"):
+        if path.suffix in (".pyi", ".png", ".bin", ".wav"):
             write(path, pathlib.Path(*path.parts[1:]))
 
     writestr(f"JoBase-{VERSION}.dist-info/METADATA", [

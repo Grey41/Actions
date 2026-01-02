@@ -1,7 +1,7 @@
 /*
 TODO:
 
-Base - top, bottom, left, right
+- Base - top, bottom, left, right
 - Constants (colours)
 - Check OpenGL binding to zero
 - Check all mallocs and strdup
@@ -9,15 +9,37 @@ Base - top, bottom, left, right
 mouse enter, leave
 - keydown
 - text.units
-update __init__.pyi
+- update __init__.pyi
+- more fonts
 - images memory leak
 - sdl errors
+zooom opposite of scale?
+turn mods into booleans, maybe
+- sound files (init name = DEFAULT) <-- actually no
+- add blit() to all shapes
+fix the save() function of screen
+sound change file after init?
+- line transparency
+window pixel ratio
+- sound default audio
+- finish collision (and docs)
+- docs: text doesn not instance rect
+- pyargparse for screen
+- docs: top bottom left right
+- random in docs
+- upside down screen?
+- app logo!!
+finish key init__py
+
+TO Test:
+
+screen saving
 */
 
-#define FILE(n, s) CHECK(PyModule_AddStringConstant(program,n,memcpy(path.src+path.size,s,strlen(s)+1)))
-#define CALL(e) PyObject_CallObject((PyObject*)&e,NULL)
+#define FILE(n, s) sprintf(path.src+path.size,s);CHECK(PyModule_AddStringConstant(program,n,path.src))
 #define ADD(n, t) CHECK(PyModule_Add(program,n,t))
 #define COLOR(r, g, b) PyTuple_Pack(3,PyFloat_FromDouble(r),PyFloat_FromDouble(g),PyFloat_FromDouble(b))
+#define TYPE(e, x) CHECK(!(e.type=(PyTypeObject *)PyType_FromSpecWithBases(&e.spec,x)))
 #define CHECK(e) if(e)goto fail;
 
 #include "main.h"
@@ -318,6 +340,8 @@ PyObject *error;
 PyObject *program;
 Texture *textures;
 Font *fonts;
+Audio *audio;
+MIX_Mixer *mixer;
 
 Button button[LEN(buttons)];
 Button key[LEN(keys)];
@@ -335,6 +359,14 @@ struct Mouse mouse = {
     .len = LEN(buttons)
 };
 
+static void clean(void) {
+    SDL_GL_DestroyContext(window.ctx);
+    SDL_DestroyWindow(window.sdl);
+
+    MIX_Quit();
+    SDL_Quit();
+}
+
 static int compare(uint32_t *code, Key *key) {
     return *code - key -> id;
 }
@@ -343,46 +375,23 @@ static int name(Button *a, Button *b) {
     return strcmp(a -> key -> key, b -> key -> key);
 }
 
-static Key *search(uint32_t code, Key *list, size_t size) {
-    return bsearch(&code, list, size, sizeof(Key), (int (*)(const void *, const void *)) compare);
+static void matrix(void) {
+    const double sx = 2 / window.size.x / camera.scale.x;
+    const double sy = 2 / window.size.y / camera.scale.y;
+
+    GLfloat matrix[] = {
+        sx, 0, 0, 0,
+        0, sy, 0, 0,
+        -camera.pos.x * sx, -camera.pos.y * sy, -1, 0
+    };
+
+    glBindBuffer(GL_UNIFORM_BUFFER, shader.ubo);
+    glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof matrix, matrix);
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
 }
 
-static void clean(void) {
-    while (textures) {
-        Texture *this = textures;
-
-        textures = this -> next;
-        glDeleteTextures(1, &this -> src);
-
-        free(this -> name);
-        free(this);
-    }
-
-    while (fonts) {
-        Font *this = fonts;
-
-        fonts = this -> next;
-        glDeleteTextures(1, &this -> src);
-
-        free(this -> chars);
-        free(this);
-    }
-
-    printf("FREE vao\n");
-
-    glDeleteVertexArrays(1, &shader.vao);
-    glDeleteBuffers(1, &shader.ubo);
-
-    glDeleteProgram(shader.plain.src);
-    glDeleteProgram(shader.image.src);
-    glDeleteProgram(shader.circle.src);
-    glDeleteProgram(shader.text.src);
-
-    printf("FREE stuff\n");
-
-    SDL_GL_DestroyContext(window.ctx);
-    SDL_DestroyWindow(window.sdl);
-    SDL_Quit();
+static Key *search(uint32_t code, Key *list, size_t size) {
+    return bsearch(&code, list, size, sizeof(Key), (int (*)(const void *, const void *)) compare);
 }
 
 static GLuint compile(GLenum type, const GLchar *source) {
@@ -416,11 +425,11 @@ static int update(PyObject *loop) {
             return 1;
 
         if (event.type == SDL_EVENT_MOUSE_MOTION) {
-            mouse.pos.x = event.motion.x - window.size.x / 2;
-            mouse.pos.y = window.size.y / 2 - event.motion.y;
+            mouse.pos.x = round((event.motion.x - window.size.x / 2) * window.ratio) / window.ratio;
+            mouse.pos.y = round((window.size.y / 2 - event.motion.y) * window.ratio) / window.ratio;
 
             mouse.move.x = event.motion.xrel;
-            mouse.move.y = event.motion.yrel;
+            mouse.move.y = -event.motion.yrel;
         }
 
         else if (event.type == SDL_EVENT_WINDOW_RESIZED) {
@@ -458,18 +467,7 @@ static int update(PyObject *loop) {
         }
     }
 
-    const double sx = 2 / window.size.x * camera.scale.x;
-    const double sy = 2 / window.size.y * camera.scale.y;
-
-    GLfloat matrix[] = {
-        sx, 0, 0, 0,
-        0, sy, 0, 0,
-        -camera.pos.x * sx, -camera.pos.y * sy, -1, 0
-    };
-
-    glBindBuffer(GL_UNIFORM_BUFFER, shader.ubo);
-    glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof matrix, matrix);
-    glBindBuffer(GL_UNIFORM_BUFFER, 0);
+    matrix();
     glClear(GL_COLOR_BUFFER_BIT);
 
     if (loop) {
@@ -494,27 +492,30 @@ static int update(PyObject *loop) {
     return SDL_GL_SwapWindow(window.sdl) ? 0 : (PyErr_SetString(error, SDL_GetError()), -1);
 }
 
+static int module_clear(PyObject *self) {
+    Py_CLEAR(program);
+    Py_CLEAR(error);
+
+    return 0;
+}
+
 #ifdef __EMSCRIPTEN__
-static PyObject *method;
+static bool running;
 
-static void run() {
-    if (method && update(method)) {
-        Py_XDECREF(method);
-        PyErr_Print();
+EM_JS(uint32_t, width, (void), {return data.canvas.clientWidth})
+EM_JS(uint32_t, height, (void), {return data.canvas.clientHeight})
+EM_JS(void, init, (void), {data.open()})
+EM_JS(void, end, (void), {data.close()})
 
-        method = NULL;
-    }
-}
+static bool run(double time, PyObject *loop) {
+    if (running && !update(loop))
+        return true;
 
-EMSCRIPTEN_KEEPALIVE
-void start() {
-    Py_Initialize();
-    emscripten_set_main_loop(run, 0, 0);
-}
+    Py_XDECREF(loop);
+    Py_Finalize();
+    chdir("/");
 
-EMSCRIPTEN_KEEPALIVE
-void call(const char *string) {
-    PyRun_SimpleString(string);
+    return end(), false;
 }
 #endif
 
@@ -524,7 +525,11 @@ static PyObject *module_run(PyObject *self, PyObject *ignored) {
     if (PyObject_GetOptionalAttrString(program, "loop", &loop) >= 0) {
         if (SDL_ShowWindow(window.sdl)) {
 #ifdef __EMSCRIPTEN__
-            method = loop;
+            running = true;
+
+            init();
+            emscripten_request_animation_frame_loop((bool (*)(double, void *)) run, loop);
+
             Py_RETURN_NONE;
 #else
             int status;
@@ -544,35 +549,52 @@ static PyObject *module_run(PyObject *self, PyObject *ignored) {
     return NULL;
 }
 
+static PyObject *module_random(PyObject *self, PyObject *args) {
+    double x = 0, y = 1;
+
+    if (PyArg_ParseTuple(args, "|dd:random", &x, &y))
+        return PyFloat_FromDouble(rand() / (RAND_MAX / fabs(y - x)) + MIN(x, y));
+
+    return NULL;
+}
+
 static PyMethodDef module_methods[] = {
     {"run", module_run, METH_NOARGS, "Run the main game loop"},
+    {"random", module_random, METH_VARARGS, "Generate a random floating point number"},
     {NULL}
 };
 
 static int module_exec(PyObject *self) {
-    if (Py_AtExit(clean) || (error = PyErr_NewException("JoBase.SDLError", PyExc_OSError, NULL))) {
-        if (SDL_Init(SDL_INIT_VIDEO)) {
-            SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-            SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
-            SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
-            SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 0);
+    printf("Welcome to JoBase\n");
 
-            window.sdl = SDL_CreateWindow(NULL, 0, 0, SDL_WINDOW_OPENGL | SDL_WINDOW_HIDDEN | SDL_WINDOW_RESIZABLE);
-
-            if (window.sdl && (window.ctx = SDL_GL_CreateContext(window.sdl)) && SDL_GL_SetSwapInterval(1)) {
-                CHECK(PyDict_GetItemStringRef(PySys_GetObject("modules"), "__main__", &program) < 0)
-
-                if (!program) {
-                    PyErr_SetString(PyExc_ModuleNotFoundError, "Couldn't find module '__main__'");
-                    goto fail;
-                }
+    if ((error = PyErr_NewException("JoBase.SDLError", PyExc_OSError, NULL)) && !Py_AtExit(clean)) {
+        if (
+            SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) && MIX_Init() &&
+            SDL_SetHint(SDL_HINT_EMSCRIPTEN_KEYBOARD_ELEMENT, "#canvas") &&
+            SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3) &&
+            SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0) &&
+            SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE) &&
+            SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 0)
+        ) {
 #ifdef __EMSCRIPTEN__
-                path.size = 0;
-
+            window.sdl = SDL_CreateWindow(NULL, width(), height(), SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIGH_PIXEL_DENSITY);
+#else
+            window.sdl = SDL_CreateWindow(NULL, 0, 0, SDL_WINDOW_OPENGL | SDL_WINDOW_HIDDEN | SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIGH_PIXEL_DENSITY);
+#endif
+            if (window.sdl &&
+                (mixer = MIX_CreateMixerDevice(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, NULL)) &&
+                (window.ctx = SDL_GL_CreateContext(window.sdl)) &&
+                (window.ratio = SDL_GetWindowPixelDensity(window.sdl)) &&
+                SDL_GL_SetSwapInterval(1)
+            ) {
+#ifdef __EMSCRIPTEN__
                 if (!(path.src = malloc(36))) {
                     PyErr_NoMemory();
                     goto fail;
                 }
+
+                path.size = 1;
+                *path.src = '/';
 #else
                 if (!gladLoadGLLoader((GLADloadproc) SDL_GL_GetProcAddress)) {
                     PyErr_SetString(PyExc_OSError, "Failed to load OpenGL");
@@ -602,84 +624,38 @@ static int module_exec(PyObject *self) {
                 memcpy(path.src, str, path.size);
                 Py_DECREF(file);
 #endif
+                CHECK(!(program = PyImport_AddModuleRef("__main__")))
+
+                TYPE(window_data, NULL)
+                TYPE(vector_data, NULL)
+                TYPE(camera_data, NULL)
+                TYPE(mouse_data, NULL)
+                TYPE(key_data, NULL)
+                TYPE(sound_data, NULL)
+                TYPE(base_data, NULL)
+                TYPE(button_data, NULL)
+                TYPE(mod_data, NULL)
+                TYPE(points_data, NULL)
+                TYPE(rect_data, (PyObject *) base_data.type)
+                TYPE(shape_data, (PyObject *) base_data.type)
+                TYPE(circle_data, (PyObject *) base_data.type)
+                TYPE(screen_data, (PyObject *) rect_data.type)
+                TYPE(text_data, (PyObject *) base_data.type)
+                TYPE(line_data, (PyObject *) shape_data.type)
+                TYPE(image_data, (PyObject *) rect_data.type)
+
                 FILE("MAN", "images/man.png")
+                FILE("COIN", "images/coin.png")
+                FILE("ENEMY", "images/enemy.png")
+                FILE("PICKUP", "audio/pickup.wav")
+                FILE("BLIP", "audio/blip.wav")
 
-                CHECK(PyModule_AddIntConstant(program, "DEFAULT", 0));
-                CHECK(PyModule_AddIntConstant(program, "CODE", 1));
-
-                CHECK(PyType_Ready(&WindowType))
-                CHECK(PyType_Ready(&MouseType))
-                CHECK(PyType_Ready(&VectorType))
-                CHECK(PyType_Ready(&KeyType))
-                CHECK(PyType_Ready(&ButtonType))
-                CHECK(PyType_Ready(&ModType))
-                CHECK(PyType_Ready(&BaseType))
-                CHECK(PyType_Ready(&RectType))
-                CHECK(PyType_Ready(&CameraType))
-                CHECK(PyType_Ready(&ShapeType))
-                CHECK(PyType_Ready(&PointsType))
-                CHECK(PyType_Ready(&LineType))
-                CHECK(PyType_Ready(&ImageType))
-                CHECK(PyType_Ready(&CircleType))
-                CHECK(PyType_Ready(&TextType))
-                CHECK(!PyObject_Init(&keyboard.map, &ModType))
-
-                for (uint16_t i = 0; i < LEN(keys); i ++) {
-                    CHECK(!PyObject_Init((PyObject *) &key[i], &ButtonType))
-                    key[i].key = &keys[i];
-                }
-
-                for (uint8_t i = 0; i < LEN(mods); i ++) {
-                    CHECK(!PyObject_Init((PyObject *) &mod[i], &ButtonType))
-                    mod[i].key = &mods[i];
-                }
-
-                for (uint8_t i = 0; i < LEN(buttons); i ++) {
-                    CHECK(!PyObject_Init((PyObject *) &button[i], &ButtonType))
-                    button[i].key = &buttons[i];
-                }
-
-                ADD("camera", CALL(CameraType))
-                ADD("window", CALL(WindowType))
-                ADD("mouse", CALL(MouseType))
-                ADD("key", CALL(KeyType))
-                ADD("Rect", (PyObject *) &RectType)
-                ADD("Shape", (PyObject *) &ShapeType)
-                ADD("Line", (PyObject *) &LineType)
-                ADD("Image", (PyObject *) &ImageType)
-                ADD("Circle", (PyObject *) &CircleType)
-                ADD("Text", (PyObject *) &TextType)
-
-                ADD("WHITE", COLOR(1, 1, 1))
-                ADD("BLACK", COLOR(0, 0, 0))
-                ADD("GRAY", COLOR(.5, .5, .5))
-                ADD("DARK_GRAY", COLOR(.2, .2, .2))
-                ADD("LIGHT_GRAY", COLOR(.8, .8, .8))
-                ADD("BROWN", COLOR(.6, .2, .2))
-                ADD("TAN", COLOR(.8, .7, .6))
-                ADD("RED", COLOR(1, 0, 0))
-                ADD("DARK_RED", COLOR(.6, 0, 0))
-                ADD("SALMON", COLOR(1, .5, .5))
-                ADD("ORANGE", COLOR(1, .5, 0))
-                ADD("GOLD", COLOR(1, .8, 0))
-                ADD("YELLOW", COLOR(1, 1, 0))
-                ADD("OLIVE", COLOR(.5, .5, 0))
-                ADD("LIME", COLOR(0, 1, 0))
-                ADD("DARK_GREEN", COLOR(0, .4, 0))
-                ADD("GREEN", COLOR(0, .5, 0))
-                ADD("AQUA", COLOR(0, 1, 1))
-                ADD("BLUE", COLOR(0, 0, 1))
-                ADD("LIGHT_BLUE", COLOR(.5, .8, 1))
-                ADD("AZURE", COLOR(.9, 1, 1))
-                ADD("NAVY", COLOR(0, 0, .5))
-                ADD("PURPLE", COLOR(.5, 0, 1))
-                ADD("PINK", COLOR(1, .75, .8))
-                ADD("MAGENTA", COLOR(1, 0, 1))
-
-                qsort(keys, LEN(keys), sizeof(Key), (int (*)(const void *, const void *)) compare);
-                qsort(mods, LEN(mods), sizeof(Key), (int (*)(const void *, const void *)) compare);
-                qsort(key, LEN(keys), sizeof(Button), (int (*)(const void *, const void *)) name);
-                qsort(mod, LEN(mods), sizeof(Button), (int (*)(const void *, const void *)) name);
+                CHECK(PyModule_AddIntConstant(program, "DEFAULT", 0))
+                CHECK(PyModule_AddIntConstant(program, "CODE", 1))
+                CHECK(PyModule_AddIntConstant(program, "SERIF", 2))
+                CHECK(PyModule_AddIntConstant(program, "DISPLAY", 3))
+                CHECK(PyModule_AddIntConstant(program, "PIXEL", 4))
+                CHECK(!PyObject_Init(&keyboard.map, mod_data.type))
 
                 GLfloat data[] = {-.5, .5, 0, 0, .5, .5, 1, 0, -.5, -.5, 0, 1, .5, -.5, 1, 1};
                 GLuint buffers[2];
@@ -778,6 +754,9 @@ static int module_exec(PyObject *self) {
                         "float width = fwidth(dist);"
                         "float opacity = smoothstep(.5 - width, .5 + width, dist);"
 
+                        //dist - .2 light
+                        //dist + .2 bold
+
                         "frag = color * vec4(1, 1, 1, opacity);"
                         // "frag = texture(sampler, pos);"
                     "}");
@@ -815,7 +794,114 @@ static int module_exec(PyObject *self) {
 
                 glActiveTexture(GL_TEXTURE0);
                 glEnable(GL_BLEND);
-                glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+                glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE);
+
+                for (uint16_t i = 0; i < LEN(keys); i ++) {
+                    CHECK(!PyObject_Init((PyObject *) &key[i], button_data.type))
+                    key[i].key = &keys[i];
+                }
+
+                for (uint8_t i = 0; i < LEN(mods); i ++) {
+                    CHECK(!PyObject_Init((PyObject *) &mod[i], button_data.type))
+                    mod[i].key = &mods[i];
+                }
+
+                for (uint8_t i = 0; i < LEN(buttons); i ++) {
+                    CHECK(!PyObject_Init((PyObject *) &button[i], button_data.type))
+                    button[i].key = &buttons[i];
+                }
+
+                ADD("camera", PyObject_CallObject((PyObject *) camera_data.type, NULL))
+                ADD("window", PyObject_CallObject((PyObject *) window_data.type, NULL))
+                ADD("mouse", PyObject_CallObject((PyObject *) mouse_data.type, NULL))
+                ADD("key", PyObject_CallObject((PyObject *) key_data.type, NULL))
+                ADD("Rect", (PyObject *) rect_data.type)
+                ADD("Shape", (PyObject *) shape_data.type)
+                ADD("Line", (PyObject *) line_data.type)
+                ADD("Image", (PyObject *) image_data.type)
+                ADD("Circle", (PyObject *) circle_data.type)
+                ADD("Text", (PyObject *) text_data.type)
+                ADD("Sound", (PyObject *) sound_data.type)
+                ADD("Screen", (PyObject *) screen_data.type)
+
+                ADD("WHITE", COLOR(1, 1, 1))
+                ADD("BLACK", COLOR(0, 0, 0))
+                ADD("GRAY", COLOR(.5, .5, .5))
+                ADD("DARK_GRAY", COLOR(.2, .2, .2))
+                ADD("LIGHT_GRAY", COLOR(.8, .8, .8))
+                ADD("BROWN", COLOR(.6, .2, .2))
+                ADD("TAN", COLOR(.8, .7, .6))
+                ADD("RED", COLOR(1, 0, 0))
+                ADD("DARK_RED", COLOR(.6, 0, 0))
+                ADD("SALMON", COLOR(1, .5, .5))
+                ADD("ORANGE", COLOR(1, .5, 0))
+                ADD("GOLD", COLOR(1, .8, 0))
+                ADD("YELLOW", COLOR(1, 1, 0))
+                ADD("OLIVE", COLOR(.5, .5, 0))
+                ADD("LIME", COLOR(0, 1, 0))
+                ADD("DARK_GREEN", COLOR(0, .4, 0))
+                ADD("GREEN", COLOR(0, .5, 0))
+                ADD("AQUA", COLOR(0, 1, 1))
+                ADD("BLUE", COLOR(0, 0, 1))
+                ADD("LIGHT_BLUE", COLOR(.5, .8, 1))
+                ADD("AZURE", COLOR(.9, 1, 1))
+                ADD("NAVY", COLOR(0, 0, .5))
+                ADD("PURPLE", COLOR(.5, 0, 1))
+                ADD("PINK", COLOR(1, .75, .8))
+                ADD("MAGENTA", COLOR(1, 0, 1))
+
+                qsort(keys, LEN(keys), sizeof(Key), (int (*)(const void *, const void *)) compare);
+                qsort(mods, LEN(mods), sizeof(Key), (int (*)(const void *, const void *)) compare);
+                qsort(key, LEN(keys), sizeof(Button), (int (*)(const void *, const void *)) name);
+                qsort(mod, LEN(mods), sizeof(Button), (int (*)(const void *, const void *)) name);
+
+                matrix();
+                camera.flip = 1;
+
+                
+                // MIX_AudioDecoder *decoder = MIX_CreateAudioDecoder("darla.mp3", 0);
+                // FILE *f = fopen("output.txt", "wb");
+
+                // int bytes = 0;
+
+                
+                // SDL_AudioSpec spec;
+
+                // if (!MIX_GetAudioDecoderFormat(decoder, &spec)) {
+                //     printf("AAAAAA %s\n", SDL_GetError());
+                // }
+
+                // double time = 0;
+                // int frames = 0;
+
+                // // MIX_MSToFrames(spec.freq, );
+
+                // while (1) {
+                //     time += 1. / 60;
+                //     int goal = (int) (time * spec.freq);
+                //     int amount = goal - frames;
+
+                //     frames = goal;
+
+                //     int size = amount * sizeof(float) * spec.channels;
+                //     float *buffer = malloc(size);
+
+                //     bytes = MIX_DecodeAudio(decoder, buffer, size, &spec);
+
+                //     if (bytes < 0) {
+                //         printf("An error occurred %s\n", SDL_GetError());
+                //         break;
+                //     }
+
+                //     for (int i = 0; i < bytes / (4 * spec.channels); i ++) {
+                //         fprintf(f, i ? ", %f" : "%f", buffer[i * spec.channels]);
+                //     }
+
+                //     fprintf(f, "\n");
+
+                //     if (!bytes)
+                //         break;
+                // }
 
                 return PyModule_AddFunctions(program, module_methods);
 
@@ -835,28 +921,93 @@ static int module_exec(PyObject *self) {
 }
 
 static int module_traverse(PyObject *self, visitproc visit, void *arg) {
-    printf("TRAVERSE\n");
-
     Py_VISIT(program);
     Py_VISIT(error);
 
     return 0;
 }
 
-static int module_clear(PyObject *self) {
-    printf("CLEAR\n");
-
-    Py_CLEAR(program);
-    Py_CLEAR(error);
-
-    return 0;
-}
-
 static void module_free(void *closure) {
-    printf("FREE MODULE\n");
+    module_clear(NULL);
+
     free(window.title);
     free(path.src);
+
+    while (textures) {
+        Texture *this = textures;
+
+        textures = this -> next;
+        glDeleteTextures(1, &this -> src);
+
+        free(this -> name);
+        free(this);
+    }
+
+    while (fonts) {
+        Font *this = fonts;
+
+        fonts = this -> next;
+        glDeleteTextures(1, &this -> src);
+
+        free(this -> chars);
+        free(this);
+    }
+
+    while (audio) {
+        Audio *this = audio;
+
+        audio = this -> next;
+        MIX_DestroyAudio(this -> src);
+
+        free(this -> name);
+        free(this);
+    }
+
+    if (shader.vao) {
+        glDeleteVertexArrays(1, &shader.vao);
+        glDeleteBuffers(1, &shader.ubo);
+
+        glDeleteProgram(shader.plain.src);
+        glDeleteProgram(shader.image.src);
+        glDeleteProgram(shader.circle.src);
+        glDeleteProgram(shader.text.src);
+    }
 }
+
+#ifdef __EMSCRIPTEN__
+EMSCRIPTEN_KEEPALIVE
+void stop(void) {
+    running = false;
+}
+
+EMSCRIPTEN_KEEPALIVE
+void call(const char *string) {
+    Py_Initialize();
+    chdir("/main");
+
+    PyObject *root = PyUnicode_FromString("/main");
+
+    if (PyList_Append(PySys_GetObject("path"), root))
+        Py_DECREF(root);
+
+    else {
+        Py_DECREF(root);
+
+        if (!string) {
+            FILE *file = fopen("/main/__main__.py", "r");
+
+            if (file && !PyRun_SimpleFileEx(file, "__main__.py", 1) && running)
+                return;
+        }
+
+        else if (!PyRun_SimpleString(string) && running)
+            return;
+    }
+
+    Py_Finalize();
+    chdir("/");
+}
+#endif
 
 static PyModuleDef_Slot module_slots[] = {
     {Py_mod_exec, module_exec},
@@ -874,5 +1025,5 @@ static PyModuleDef module = {
 };
 
 PyMODINIT_FUNC PyInit_JoBase(void) {
-    return printf("Welcome to JoBase\n"), PyModuleDef_Init(&module);
+    return srand(time(NULL)), PyModuleDef_Init(&module);
 }
