@@ -77,11 +77,12 @@ def build_wheel(wheel_directory, config_settings = None, metadata_directory = No
 
     if not pathlib.Path("lib/mix/build").exists():
         if sys.platform == "darwin" and shutil.which("brew"):
-            pass#subprocess.run(["brew", "install", ""
+            subprocess.run(["brew", "install", "opus", "flac", "gme", "mpg123", "fluidsynth", "wavpack"])
 
         subprocess.run([
             "cmake", "-S", "lib/mix", "-B", "lib/mix/build", *arch,
             "-DBUILD_SHARED_LIBS=OFF",
+            "-DSDL_TESTS=OFF",
             "-DCMAKE_OSX_ARCHITECTURES=x86_64;arm64",
             "-DCMAKE_OSX_DEPLOYMENT_TARGET=10.13",
             "-DCMAKE_POSITION_INDEPENDENT_CODE=ON",
