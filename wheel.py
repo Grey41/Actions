@@ -86,8 +86,8 @@ def build_wheel(wheel_directory, config_settings = None, metadata_directory = No
         if sys.platform == "darwin" and shutil.which("brew"):
             subprocess.run(["brew", "install", "opus", "flac", "gme", "mpg123", "fluidsynth", "wavpack"])
 
-        if sys.platform == "win32":
-            subprocess.run(["vcpkg", "install", "libvorbis", "libflac", "opus", "mpg123", "libxmp", "fluidsynth", "wavpack"])
+        # if sys.platform == "win32":
+        #     subprocess.run(["vcpkg", "install", "libvorbis", "libflac", "opus", "mpg123", "libxmp", "fluidsynth", "wavpack"])
 
         subprocess.run([
             "cmake", "-S", "lib/mix", "-B", "lib/mix/build", *arch,
