@@ -44,10 +44,9 @@ def build_wheel(wheel_directory, config_settings = None, metadata_directory = No
 
     lines = []
     source = list(pathlib.Path("src").glob("*.c")) + list(pathlib.Path("lib/libtess2/Source").glob("*.c"))
-    vcpkg = os.environ.get("VCPKG_ROOT")
 
     arch = [
-        f"-DCMAKE_TOOLCHAIN_FILE={vcpkg}/scripts/buildsystems/vcpkg.cmake",
+        "-DCMAKE_TOOLCHAIN_FILE=%VCPKG_ROOT%/scripts/buildsystems/vcpkg.cmake",
         "-A", "Win32"
     ] if sys.platform == "win32" else []
 
