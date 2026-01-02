@@ -79,8 +79,8 @@ def build_wheel(wheel_directory, config_settings = None, metadata_directory = No
         if sys.platform == "darwin" and shutil.which("brew"):
             subprocess.run(["brew", "install", "opus", "flac", "gme", "mpg123", "fluidsynth", "wavpack"])
 
-        if sys.platform == "win32":
-            subprocess.run(["vcpkg", "install", "libogg", "libvorbis"])
+        # if sys.platform == "win32":
+        #     subprocess.run(["vcpkg", "install", "libogg", "libvorbis"])
 
         subprocess.run([
             "cmake", "-S", "lib/mix", "-B", "lib/mix/build", *arch,
@@ -90,6 +90,7 @@ def build_wheel(wheel_directory, config_settings = None, metadata_directory = No
             "-DCMAKE_OSX_DEPLOYMENT_TARGET=10.13",
             "-DCMAKE_POSITION_INDEPENDENT_CODE=ON",
             "-DCMAKE_PREFIX_PATH=/opt/homebrew",
+            "-DSDLMIXER_VENDORED=OFF",
             f"-DSDL3_DIR={pathlib.Path.cwd()}/lib/sdl/build"
         ])
 
