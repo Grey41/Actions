@@ -44,13 +44,9 @@ def build_wheel(wheel_directory, config_settings = None, metadata_directory = No
 
     lines = []
     source = list(pathlib.Path("src").glob("*.c")) + list(pathlib.Path("lib/libtess2/Source").glob("*.c"))
+    # arch = ["-A", "Win32"] if sys.platform == "win32" else []
 
-    arch = [
-        "-DCMAKE_TOOLCHAIN_FILE=%VCPKG_ROOT%/scripts/buildsystems/vcpkg.cmake",
-        "-A", "Win32"
-    ] if sys.platform == "win32" else []
-
-    # arch = [] if sys.maxsize > 2 ** 32 or sys.platform != "win32" else ["-A", "Win32"]
+    arch = [] if sys.maxsize > 2 ** 32 or sys.platform != "win32" else ["-A", "Win32"]
 
     if not pathlib.Path("lib/sdl/build").exists():
         if sys.platform == "linux":
@@ -101,10 +97,8 @@ def build_wheel(wheel_directory, config_settings = None, metadata_directory = No
 
         subprocess.run(["cmake", "--build", "lib/mix/build", "--config", "Release"])
 
-    subprocess.run(["dir"])
+    subprocess.run(["dir", sysconfig.get_config_var("LIBDIR")])
     subprocess.run(["dir", str(pathlib.Path(wheel_directory))])
-
-    print(source)
 
     print(" ".join([
         "cl", *(str(e) for e in source),
