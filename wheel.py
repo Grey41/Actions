@@ -96,6 +96,20 @@ def build_wheel(wheel_directory, config_settings = None, metadata_directory = No
         subprocess.run(["cmake", "--build", "lib/mix/build", "--config", "Release"])
 
     subprocess.run(["dir"])
+    subprocess.run(["dir", "lib\\sdl\\build"])
+
+    print([
+        "cl", *source,
+        "/LD", "/MD",
+        "/I", include, "/I", "include", "/I", "lib\\stb",
+        "/I", "lib\\libtess2\\Include", "/I", "lib\\sdl\\include", "/I", "lib\\mix\\include",
+        "/link",
+        "/LIBPATH:lib\\sdl\\build\\Release", "SDL3-static.lib",
+        "/LIBPATH:" + sysconfig.get_config_var("LIBDIR"),
+        "user32.lib", "winmm.lib", "advapi32.lib", "ole32.lib", "gdi32.lib",
+        "shell32.lib", "setupapi.lib", "version.lib", "imm32.lib",
+        "/OUT:" + str(pathlib.Path(wheel_directory) / out)
+    ])
 
     subprocess.run([
         "cl", *source,
