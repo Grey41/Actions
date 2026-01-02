@@ -80,7 +80,7 @@ def build_wheel(wheel_directory, config_settings = None, metadata_directory = No
             subprocess.run(["brew", "install", "opus", "flac", "gme", "mpg123", "fluidsynth", "wavpack"])
 
         if sys.platform == "win32":
-            subprocess.run(["vcpkg", "install", "libvorbis", "libflac", "opus", "mpg123", "xmp", "fluidsynth", "wavpack"])
+            subprocess.run(["vcpkg", "install", "libvorbis", "libflac", "opus", "mpg123", "libxmp", "fluidsynth", "wavpack"])
 
         subprocess.run([
             "cmake", "-S", "lib/mix", "-B", "lib/mix/build", *arch,
@@ -96,7 +96,9 @@ def build_wheel(wheel_directory, config_settings = None, metadata_directory = No
         subprocess.run(["cmake", "--build", "lib/mix/build", "--config", "Release"])
 
     subprocess.run(["dir"])
-    subprocess.run(["dir", "lib\\sdl\\build\\Release"])
+    subprocess.run(["dir", "lib\\libtess2\\Source"])
+
+    print(source)
 
     print(" ".join([
         "cl", *(str(e) for e in source),
