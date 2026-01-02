@@ -31,7 +31,8 @@ def build_wheel(wheel_directory, config_settings = None, metadata_directory = No
             subprocess.run(["git", "clone", f"https://github.com/{url}.git", "lib/" + name, "--depth", "1"])
 
     build, flags, include, ext, ver, abi = sysconfig.get_config_vars("BLDSHARED", "OPT", "INCLUDEPY", "EXT_SUFFIX", "py_version_nodot", "abiflags")
-    tag = f"cp{ver}-cp{ver}{abi}-{os.environ.get("PLAT", sysconfig.get_platform().replace("-", "_").replace(".", "_"))}"
+    plat = os.environ.get("PLAT", sysconfig.get_platform().replace("-", "_").replace(".", "_"))
+    tag = f"cp{ver}-cp{ver}{abi}-{plat}"
     wheel = f"JoBase-{VERSION}-{tag}.whl"
     file = zipfile.ZipFile(pathlib.Path(wheel_directory) / wheel, "w")
     out = "__init__" + ext
