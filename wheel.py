@@ -79,13 +79,12 @@ def build_wheel(wheel_directory, config_settings = None, metadata_directory = No
         if sys.platform == "darwin" and shutil.which("brew"):
             subprocess.run(["brew", "install", "opus", "flac", "gme", "mpg123", "fluidsynth", "wavpack"])
 
-        # if sys.platform == "win32":
-        #     subprocess.run(["vcpkg", "install", "libogg", "libvorbis"])
+        if sys.platform == "win32":
+            subprocess.run(["vcpkg", "install", "libvorbis", "opus", "flac", "mpg123", "xmp", "fluidsynth", "wavpack"])
 
         subprocess.run([
             "cmake", "-S", "lib/mix", "-B", "lib/mix/build", *arch,
             "-DBUILD_SHARED_LIBS=OFF",
-            "-DSDL_TESTS=OFF",
             "-DCMAKE_OSX_ARCHITECTURES=x86_64;arm64",
             "-DCMAKE_OSX_DEPLOYMENT_TARGET=10.13",
             "-DCMAKE_POSITION_INDEPENDENT_CODE=ON",
@@ -96,9 +95,11 @@ def build_wheel(wheel_directory, config_settings = None, metadata_directory = No
 
         subprocess.run(["cmake", "--build", "lib/mix/build", "--config", "Release"])
 
+    subprocess.run(["dir"])
+
     subprocess.run([
         "cl", *source,
-        "/Fodist\\", "/LD", "/MD",
+        "/LD", "/MD",
         "/I", include, "/I", "include", "/I", "lib\\stb",
         "/I", "lib\\libtess2\\Include", "/I", "lib\\sdl\\include", "/I", "lib\\mix\\include",
         "/link",
