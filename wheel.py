@@ -30,6 +30,11 @@ def build_wheel(wheel_directory, config_settings = None, metadata_directory = No
         if not pathlib.Path("lib/" + name).exists():
             subprocess.run(["git", "clone", f"https://github.com/{url}.git", "lib/" + name, "--depth", "1"])
 
+    clone("memononen/libtess2", "libtess2")
+    clone("libsdl-org/SDL_mixer", "mix")
+    clone("nothings/stb", "stb")
+    clone("JoBase/SDL", "sdl")
+
     build, flags, include, ext, ver, abi = sysconfig.get_config_vars("BLDSHARED", "OPT", "INCLUDEPY", "EXT_SUFFIX", "py_version_nodot", "abiflags")
     plat = os.environ.get("PLAT", sysconfig.get_platform().replace("-", "_").replace(".", "_"))
     tag = f"cp{ver}-cp{ver}{abi}-{plat}"
@@ -39,12 +44,14 @@ def build_wheel(wheel_directory, config_settings = None, metadata_directory = No
 
     lines = []
     source = list(pathlib.Path("src").glob("*.c")) + list(pathlib.Path("lib/libtess2/Source").glob("*.c"))
-    arch = [] if sys.maxsize > 2 ** 32 or sys.platform != "win32" else ["-A", "Win32"]
+    vcpkg = os.environ.get("VCPKG_ROOT")
 
-    clone("memononen/libtess2", "libtess2")
-    clone("libsdl-org/SDL_mixer", "mix")
-    clone("nothings/stb", "stb")
-    clone("JoBase/SDL", "sdl")
+    arch = [
+        f"-DCMAKE_TOOLCHAIN_FILE={vcpkg}/scripts/buildsystems/vcpkg.cmake",
+        "-A", "Win32"
+    ] if sys.platform == "win32" else []
+
+    # arch = [] if sys.maxsize > 2 ** 32 or sys.platform != "win32" else ["-A", "Win32"]
 
     if not pathlib.Path("lib/sdl/build").exists():
         if sys.platform == "linux":
@@ -96,7 +103,7 @@ def build_wheel(wheel_directory, config_settings = None, metadata_directory = No
         subprocess.run(["cmake", "--build", "lib/mix/build", "--config", "Release"])
 
     subprocess.run(["dir"])
-    subprocess.run(["dir", "lib\\libtess2\\Source"])
+    subprocess.run(["dir", str(pathlib.Path(wheel_directory))])
 
     print(source)
 

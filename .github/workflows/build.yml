@@ -18,6 +18,7 @@ jobs:
         os:
           # - [macos-latest, MacOS]
           - [windows-latest, Windows]
+          #- [ubuntu-latest, Linux]
 
     steps:
       - name: Checkout
@@ -27,6 +28,7 @@ jobs:
         uses: pypa/cibuildwheel@v3.3.0
         env:
           CIBW_ARCHS_MACOS: x86_64 arm64 universal2
+          CIBW_ARCHS_LINUX: x86_64 i686 aarch64 ppc64le s390x armv7l riscv64
 
       - name: Upload
         uses: actions/upload-artifact@v4
