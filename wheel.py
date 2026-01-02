@@ -56,6 +56,7 @@ def build_wheel(wheel_directory, config_settings = None, metadata_directory = No
 
         subprocess.run([
             "cmake", "-S", "lib/sdl", "-B", "lib/sdl/build", *arch,
+            "-DCMAKE_INSTALL_PREFIX=lib/sdl/build",
             "-DBUILD_SHARED_LIBS=OFF",
             "-DSDL_SHARED=OFF",
             "-DCMAKE_OSX_ARCHITECTURES=x86_64;arm64",
@@ -72,16 +73,20 @@ def build_wheel(wheel_directory, config_settings = None, metadata_directory = No
             "-DSDL_X11=OFF"
         ])
 
-        subprocess.run(["cmake", "--build", "lib/sdl/build", "--config", "Release", "--target", "install"])
+        subprocess.run(["cmake", "--build", "lib/sdl/build", "--config", "Release"])
 
     if not pathlib.Path("lib/mix/build").exists():
+        if sys.platform == "darwin" and shutil.which("brew"):
+            pass#subprocess.run(["brew", "install", ""
+
         subprocess.run([
             "cmake", "-S", "lib/mix", "-B", "lib/mix/build", *arch,
             "-DBUILD_SHARED_LIBS=OFF",
             "-DCMAKE_OSX_ARCHITECTURES=x86_64;arm64",
             "-DCMAKE_OSX_DEPLOYMENT_TARGET=10.13",
             "-DCMAKE_POSITION_INDEPENDENT_CODE=ON",
-            "-DCMAKE_PREFIX_PATH=/opt/homebrew"
+            "-DCMAKE_PREFIX_PATH=/opt/homebrew",
+            f"-DSDL3_DIR={pathlib.Path.cwd()}/lib/sdl/build"
         ])
 
         subprocess.run(["cmake", "--build", "lib/mix/build", "--config", "Release"])
