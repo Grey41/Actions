@@ -31,10 +31,10 @@ target_link_libraries(JoBase PRIVATE SDL3::SDL3 SDL3_mixer::SDL3_mixer Python3::
 
 set_target_properties(JoBase PROPERTIES
     PREFIX ""
-    SUFFIX ${JOBASE_EXT}
+    SUFFIX "${JOBASE_EXT}"
     OUTPUT_NAME "__init__"
-    LIBRARY_OUTPUT_DIRECTORY ${JOBASE_DIR}
-    RUNTIME_OUTPUT_DIRECTORY ${JOBASE_DIR})
+    LIBRARY_OUTPUT_DIRECTORY "${JOBASE_DIR}"
+    RUNTIME_OUTPUT_DIRECTORY "${JOBASE_DIR}")
 
 message(STATUS "jobase dir: ${JOBASE_DIR}")
-message(STATUS "jobase file: ${JOBASE_FILE}")
+message(STATUS "jobase file: ${JOBASE_EXT}")

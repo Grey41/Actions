@@ -9,7 +9,7 @@ on:
         type: boolean
 
 jobs:
-  macos:
+  wheels:
     name: ${{matrix.os[1]}}
     runs-on: ${{matrix.os[0]}}
 
