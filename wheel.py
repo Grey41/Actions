@@ -54,7 +54,7 @@ def build_wheel(wheel_directory, config_settings = None, metadata_directory = No
     tag = f"cp{ver}-cp{ver}{abi}-{plat}"
     wheel = f"JoBase-{VERSION}-{tag}.whl"
     file = zipfile.ZipFile(pathlib.Path(wheel_directory) / wheel, "w")
-    out = "__init__" + ext
+    # out = "__init__" + ext
 
     lines = []
     arch = [] if sys.maxsize > 2 ** 32 or sys.platform != "win32" else ["-A", "Win32"]
@@ -104,12 +104,12 @@ def build_wheel(wheel_directory, config_settings = None, metadata_directory = No
         "-DPython3_ROOT_DIR=" + base,
         # "-DPython3_EXECUTABLE=" + sys.executable,
         # "-DPYTHON_VERSION=" + name,
-        "-DJOBASE_FILE=" + out,
+        "-DJOBASE_EXT=" + ext,
         "-DJOBASE_DIR=" + str(pathlib.Path(wheel_directory))
     ])
 
     subprocess.run(["cmake", "--build", "build", "--config", "Release"])
-    print("---------", str(pathlib.Path(wheel_directory)), out)
+    print("---------", str(pathlib.Path(wheel_directory)), ext)
     subprocess.run(["ls", str(pathlib.Path(wheel_directory))])
 
     for path in pathlib.Path("module").rglob("*"):
@@ -134,7 +134,7 @@ def build_wheel(wheel_directory, config_settings = None, metadata_directory = No
         "Tag: " + tag
     ])
 
-    write(pathlib.Path(wheel_directory) / out, out)
+    write(pathlib.Path(wheel_directory) / "__init__" + ext, "__init__" + ext)
     lines.append(f"JoBase-{VERSION}.dist-info/RECORD,,")
     file.writestr(f"JoBase-{VERSION}.dist-info/RECORD", "\n".join(lines))
 
