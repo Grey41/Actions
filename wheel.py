@@ -43,8 +43,8 @@ def build_wheel(wheel_directory, config_settings = None, metadata_directory = No
             elif shutil.which("dnf"):
                 subprocess.run(["dnf", "install", "-y", "libxkbcommon-devel", "wayland-devel", "wayland-protocols-devel", "mesa-libEGL-devel"])
 
-        if sys.platform == "darwin" and shutil.which("brew"):
-            subprocess.run(["brew", "install", "opus", "flac", "game-music-emu", "mpg123", "fluidsynth", "wavpack"])
+        # if sys.platform == "darwin" and shutil.which("brew"):
+        #     subprocess.run(["brew", "install", "opus", "flac", "game-music-emu", "mpg123", "fluidsynth", "wavpack"])
 
         if sys.platform == "win32":
             subprocess.run(["vcpkg", "install", "libvorbis", "libflac", "opus", "mpg123", "libxmp", "fluidsynth", "wavpack"])
