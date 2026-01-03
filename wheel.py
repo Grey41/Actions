@@ -109,7 +109,7 @@ def build_wheel(wheel_directory, config_settings = None, metadata_directory = No
     ])
 
     subprocess.run(["cmake", "--build", "build", "--config", "Release"])
-
+    print("---------")
     subprocess.run(["dir", str(pathlib.Path(wheel_directory))])
 
     for path in pathlib.Path("module").rglob("*"):

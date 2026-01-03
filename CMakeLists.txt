@@ -19,7 +19,6 @@ set(SDL_TESTS OFF CACHE BOOL "" FORCE)
 
 project(JoBase)
 find_package(Python3 COMPONENTS Development.Module REQUIRED)
-# find_package(Python3 ${PYTHON_VERSION} EXACT COMPONENTS Development.Module)
 
 add_subdirectory(lib/sdl)
 add_subdirectory(lib/mix)
@@ -34,4 +33,5 @@ set_target_properties(JoBase PROPERTIES
     PREFIX ""
     SUFFIX ""
     OUTPUT_NAME ${JOBASE_FILE}
-    LIBRARY_OUTPUT_DIRECTORY ${JOBASE_DIR})
+    LIBRARY_OUTPUT_DIRECTORY ${JOBASE_DIR}
+    RUNTIME_OUTPUT_DIRECTORY ${JOBASE_DIR})
