@@ -28,26 +28,26 @@ def build_wheel(wheel_directory, config_settings = None, metadata_directory = No
 
     def clone(url, name):
         if not pathlib.Path("lib/" + name).exists():
-            subprocess.run(["git", "clone", f"https://github.com/{url}.git", "lib/" + name, "--depth", "1"])
+            subprocess.run(["git", "clone", f"https://github.com/{url}.git", "lib/" + name])
 
     clone("memononen/libtess2", "libtess2")
     clone("libsdl-org/SDL_mixer", "mix")
     clone("nothings/stb", "stb")
     clone("JoBase/SDL", "sdl")
 
-    if not os.environ.get("JOBASE_DEV"):
-        if sys.platform == "linux":
-            if shutil.which("apk"):
-                subprocess.run(["apk", "add", "--no-cache", "libxkbcommon-dev", "wayland-dev", "wayland-protocols", "mesa-dev", "libdrm-dev"])
+    # if not os.environ.get("JOBASE_DEV"):
+    #     if sys.platform == "linux":
+    #         if shutil.which("apk"):
+    #             subprocess.run(["apk", "add", "--no-cache", "libxkbcommon-dev", "wayland-dev", "wayland-protocols", "mesa-dev", "libdrm-dev"])
 
-            elif shutil.which("dnf"):
-                subprocess.run(["dnf", "install", "-y", "libxkbcommon-devel", "wayland-devel", "wayland-protocols-devel", "mesa-libEGL-devel"])
+    #         elif shutil.which("dnf"):
+    #             subprocess.run(["dnf", "install", "-y", "libxkbcommon-devel", "wayland-devel", "wayland-protocols-devel", "mesa-libEGL-devel"])
 
-        # if sys.platform == "darwin" and shutil.which("brew"):
-        #     subprocess.run(["brew", "install", "opus", "flac", "game-music-emu", "mpg123", "fluidsynth", "wavpack"])
+    #     # if sys.platform == "darwin" and shutil.which("brew"):
+    #     #     subprocess.run(["brew", "install", "opus", "flac", "game-music-emu", "mpg123", "fluidsynth", "wavpack"])
 
-        if sys.platform == "win32":
-            subprocess.run(["vcpkg", "install", "libvorbis", "libflac", "opus", "mpg123", "libxmp", "fluidsynth", "wavpack"])
+    #     # if sys.platform == "win32":
+    #     #     subprocess.run(["vcpkg", "install", "libvorbis", "libflac", "opus", "mpg123", "libxmp", "fluidsynth", "wavpack"])
 
     name, ext, ver, abi = sysconfig.get_config_vars("py_version_short", "EXT_SUFFIX", "py_version_nodot", "abiflags")
     plat = os.environ.get("PLAT", sysconfig.get_platform().replace("-", "_").replace(".", "_"))
@@ -59,22 +59,48 @@ def build_wheel(wheel_directory, config_settings = None, metadata_directory = No
     lines = []
     arch = [] if sys.maxsize > 2 ** 32 or sys.platform != "win32" else ["-A", "Win32"]
 
+    # os.environ["CMAKE_OSX_ARCHITECTURES"] = "x86_64;arm64"
+    # os.environ["CMAKE_OSX_DEPLOYMENT_TARGET"] = "10.13"
+    # os.environ["CMAKE_POSITION_INDEPENDENT_CODE"] = "ON"
+    # os.environ["CMAKE_BUILD_TYPE"] = "Release"
+    # os.environ["BUILD_SHARED_LIBS"] = "OFF"
+
+    # if not pathlib.Path("lib/sdl/build").exists():
+    #     # if sys.platform == "linux":
+    #     #     if shutil.which("apk"):
+    #     #         subprocess.run(["apk", "add", "--no-cache", "libxkbcommon-dev", "wayland-dev", "wayland-protocols", "mesa-dev", "libdrm-dev"])
+
+    #     #     elif shutil.which("dnf"):
+    #     #         subprocess.run(["dnf", "install", "-y", "libxkbcommon-devel", "wayland-devel", "wayland-protocols-devel", "mesa-libEGL-devel"])
+
+    #     subprocess.run([
+    #         "cmake", "-S", "lib/sdl", "-B", "lib/sdl/build", *arch,
+    #         "-DSDL_SHARED=OFF",
+    #         "-DSDL_TESTS=OFF",
+    #         "-DSDL_STATIC=ON",
+    #         "-DSDL_CAMERA=OFF",
+    #         "-DSDL_JOYSTICK=OFF",
+    #         "-DSDL_HAPTIC=OFF",
+    #         "-DSDL_HIDAPI=OFF",
+    #         "-DSDL_POWER=OFF",
+    #         "-DSDL_SENSOR=OFF",
+    #         "-DSDL_DIALOG=OFF",
+    #         "-DSDL_TRAY=OFF",
+    #         "-DSDL_X11=OFF"
+    #     ])
+
+    #     subprocess.run(["cmake", "--build", "lib/sdl/build", "--config", "Release"])
+
+    # if not pathlib.Path("lib/mix/build").exists():
+    #     subprocess.run([
+    #         "cmake", "-S", "lib/mix", "-B", "lib/mix/build", *arch,
+    #         "-DSDLMIXER_DEPS_SHARED=OFF",
+    #         "-DSDLMIXER_BUILD_SHARED_LIBS=OFF"
+    #     ])
+
+    #     subprocess.run(["cmake", "--build", "lib/mix/build", "--config", "Release"])
+
     subprocess.run(["cmake", "-S", ".", "-B" "build", *arch,
-        "-DBUILD_SHARED_LIBS=OFF",
-        "-DSDL_SHARED=OFF",
-        "-DCMAKE_OSX_ARCHITECTURES=x86_64;arm64",
-        "-DCMAKE_OSX_DEPLOYMENT_TARGET=10.13",
-        "-DCMAKE_POSITION_INDEPENDENT_CODE=ON",
-        "-DCMAKE_PREFIX_PATH=/opt/homebrew",
-        "-DSDL_TESTS=OFF",
-        "-DSDL_CAMERA=OFF",
-        "-DSDL_JOYSTICK=OFF",
-        "-DSDL_HAPTIC=OFF",
-        "-DSDL_HIDAPI=OFF",
-        "-DSDL_POWER=OFF",
-        "-DSDL_SENSOR=OFF",
-        "-DSDL_DIALOG=OFF",
-        "-DSDL_X11=OFF",
         "-DPYTHON_VERSION=" + name,
         "-DJOBASE_FILE=" + out,
         "-DJOBASE_DIR=" + str(pathlib.Path(wheel_directory))

@@ -1,9 +1,27 @@
 cmake_minimum_required(VERSION 3.23)
-project(JoBase)
 
+set(CMAKE_OSX_ARCHITECTURES "x86_64;arm64" CACHE STRING "" FORCE)
+set(CMAKE_OSX_DEPLOYMENT_TARGET "10.13" CACHE STRING "" FORCE)
+set(CMAKE_POSITION_INDEPENDENT_CODE ON CACHE BOOL "" FORCE)
+set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
+
+set(SDL_CAMERA OFF CACHE BOOL "" FORCE)
+set(SDL_JOYSTICK OFF CACHE BOOL "" FORCE)
+set(SDL_HAPTIC OFF CACHE BOOL "" FORCE)
+set(SDL_HIDAPI OFF CACHE BOOL "" FORCE)
+set(SDL_POWER OFF CACHE BOOL "" FORCE)
+set(SDL_SENSOR OFF CACHE BOOL "" FORCE)
+set(SDL_DIALOG OFF CACHE BOOL "" FORCE)
+set(SDL_TRAY OFF CACHE BOOL "" FORCE)
+set(SDL_SHARED OFF CACHE BOOL "" FORCE)
+set(SDL_STATIC ON CACHE BOOL "" FORCE)
+set(SDL_TESTS OFF CACHE BOOL "" FORCE)
+
+project(JoBase)
 find_package(Python3 ${PYTHON_VERSION} EXACT COMPONENTS Development.Module)
-add_subdirectory(lib/sdl lib/sdl/build)
-add_subdirectory(lib/mix lib/mix/build)
+
+add_subdirectory(lib/sdl)
+add_subdirectory(lib/mix)
 
 file(GLOB SOURCES src/*.c lib/libtess2/Source/*.c)
 add_library(JoBase MODULE ${SOURCES})
