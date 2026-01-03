@@ -18,7 +18,8 @@ set(SDL_STATIC ON CACHE BOOL "" FORCE)
 set(SDL_TESTS OFF CACHE BOOL "" FORCE)
 
 project(JoBase)
-find_package(Python3 ${PYTHON_VERSION} EXACT COMPONENTS Development.Module)
+find_package(Python3 COMPONENTS Development.Module REQUIRED)
+# find_package(Python3 ${PYTHON_VERSION} EXACT COMPONENTS Development.Module)
 
 add_subdirectory(lib/sdl)
 add_subdirectory(lib/mix)

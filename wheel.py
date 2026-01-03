@@ -49,7 +49,7 @@ def build_wheel(wheel_directory, config_settings = None, metadata_directory = No
     #     # if sys.platform == "win32":
     #     #     subprocess.run(["vcpkg", "install", "libvorbis", "libflac", "opus", "mpg123", "libxmp", "fluidsynth", "wavpack"])
 
-    name, ext, ver, abi = sysconfig.get_config_vars("py_version_short", "EXT_SUFFIX", "py_version_nodot", "abiflags")
+    base, ext, ver, abi = sysconfig.get_config_vars("installed_base", "EXT_SUFFIX", "py_version_nodot", "abiflags")
     plat = os.environ.get("PLAT", sysconfig.get_platform().replace("-", "_").replace(".", "_"))
     tag = f"cp{ver}-cp{ver}{abi}-{plat}"
     wheel = f"JoBase-{VERSION}-{tag}.whl"
@@ -101,7 +101,9 @@ def build_wheel(wheel_directory, config_settings = None, metadata_directory = No
     #     subprocess.run(["cmake", "--build", "lib/mix/build", "--config", "Release"])
 
     subprocess.run(["cmake", "-S", ".", "-B" "build", *arch,
-        "-DPYTHON_VERSION=" + name,
+        "-DPython3_ROOT_DIR=" + base,
+        # "-DPython3_EXECUTABLE=" + sys.executable,
+        # "-DPYTHON_VERSION=" + name,
         "-DJOBASE_FILE=" + out,
         "-DJOBASE_DIR=" + str(pathlib.Path(wheel_directory))
     ])
