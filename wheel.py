@@ -110,6 +110,8 @@ def build_wheel(wheel_directory, config_settings = None, metadata_directory = No
 
     subprocess.run(["cmake", "--build", "build", "--config", "Release"])
 
+    subprocess.run(["dir", str(pathlib.Path(wheel_directory))])
+
     for path in pathlib.Path("module").rglob("*"):
         if path.suffix in (".pyi", ".png", ".bin", ".wav"):
             write(path, pathlib.Path(*path.parts[1:]))
