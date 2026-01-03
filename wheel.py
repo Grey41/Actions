@@ -35,20 +35,7 @@ def build_wheel(wheel_directory, config_settings = None, metadata_directory = No
     clone("nothings/stb", "stb")
     clone("JoBase/SDL", "sdl")
 
-    build, flags, include, ext, ver, abi = sysconfig.get_config_vars("BLDSHARED", "OPT", "INCLUDEPY", "EXT_SUFFIX", "py_version_nodot", "abiflags")
-    plat = os.environ.get("PLAT", sysconfig.get_platform().replace("-", "_").replace(".", "_"))
-    tag = f"cp{ver}-cp{ver}{abi}-{plat}"
-    wheel = f"JoBase-{VERSION}-{tag}.whl"
-    file = zipfile.ZipFile(pathlib.Path(wheel_directory) / wheel, "w")
-    out = "__init__" + ext
-
-    lines = []
-    source = list(pathlib.Path("src").glob("*.c")) + list(pathlib.Path("lib/libtess2/Source").glob("*.c"))
-    # arch = ["-A", "Win32"] if sys.platform == "win32" else []
-
-    arch = [] if sys.maxsize > 2 ** 32 or sys.platform != "win32" else ["-A", "Win32"]
-
-    if not pathlib.Path("lib/sdl/build").exists():
+    if not os.environ.get("JOBASE_DEV"):
         if sys.platform == "linux":
             if shutil.which("apk"):
                 subprocess.run(["apk", "add", "--no-cache", "libxkbcommon-dev", "wayland-dev", "wayland-protocols", "mesa-dev", "libdrm-dev"])
@@ -56,89 +43,44 @@ def build_wheel(wheel_directory, config_settings = None, metadata_directory = No
             elif shutil.which("dnf"):
                 subprocess.run(["dnf", "install", "-y", "libxkbcommon-devel", "wayland-devel", "wayland-protocols-devel", "mesa-libEGL-devel"])
 
-        subprocess.run([
-            "cmake", "-S", "lib/sdl", "-B", "lib/sdl/build", *arch,
-            "-DCMAKE_INSTALL_PREFIX=lib/sdl/build",
-            "-DBUILD_SHARED_LIBS=OFF",
-            "-DSDL_SHARED=OFF",
-            "-DCMAKE_OSX_ARCHITECTURES=x86_64;arm64",
-            "-DCMAKE_OSX_DEPLOYMENT_TARGET=10.13",
-            "-DCMAKE_POSITION_INDEPENDENT_CODE=ON",
-            "-DSDL_TESTS=OFF",
-            "-DSDL_CAMERA=OFF",
-            "-DSDL_JOYSTICK=OFF",
-            "-DSDL_HAPTIC=OFF",
-            "-DSDL_HIDAPI=OFF",
-            "-DSDL_POWER=OFF",
-            "-DSDL_SENSOR=OFF",
-            "-DSDL_DIALOG=OFF",
-            "-DSDL_X11=OFF"
-        ])
-
-        subprocess.run(["cmake", "--build", "lib/sdl/build", "--config", "Release"])
-
-    if not pathlib.Path("lib/mix/build").exists():
         if sys.platform == "darwin" and shutil.which("brew"):
-            subprocess.run(["brew", "install", "opus", "flac", "gme", "mpg123", "fluidsynth", "wavpack"])
+            subprocess.run(["brew", "install", "opus", "flac", "game-music-emu", "mpg123", "fluidsynth", "wavpack"])
 
-        # if sys.platform == "win32":
-        #     subprocess.run(["vcpkg", "install", "libvorbis", "libflac", "opus", "mpg123", "libxmp", "fluidsynth", "wavpack"])
+        if sys.platform == "win32":
+            subprocess.run(["vcpkg", "install", "libvorbis", "libflac", "opus", "mpg123", "libxmp", "fluidsynth", "wavpack"])
 
-        subprocess.run([
-            "cmake", "-S", "lib/mix", "-B", "lib/mix/build", *arch,
-            "-DBUILD_SHARED_LIBS=OFF",
-            "-DCMAKE_OSX_ARCHITECTURES=x86_64;arm64",
-            "-DCMAKE_OSX_DEPLOYMENT_TARGET=10.13",
-            "-DCMAKE_POSITION_INDEPENDENT_CODE=ON",
-            "-DCMAKE_PREFIX_PATH=/opt/homebrew",
-            "-DSDLMIXER_VENDORED=OFF",
-            f"-DSDL3_DIR={pathlib.Path.cwd()}/lib/sdl/build"
-        ])
+    name, ext, ver, abi = sysconfig.get_config_vars("py_version_short", "EXT_SUFFIX", "py_version_nodot", "abiflags")
+    plat = os.environ.get("PLAT", sysconfig.get_platform().replace("-", "_").replace(".", "_"))
+    tag = f"cp{ver}-cp{ver}{abi}-{plat}"
+    wheel = f"JoBase-{VERSION}-{tag}.whl"
+    file = zipfile.ZipFile(pathlib.Path(wheel_directory) / wheel, "w")
+    out = "__init__" + ext
 
-        subprocess.run(["cmake", "--build", "lib/mix/build", "--config", "Release"])
+    lines = []
+    arch = [] if sys.maxsize > 2 ** 32 or sys.platform != "win32" else ["-A", "Win32"]
 
-    subprocess.run(["dir", sysconfig.get_config_var("LIBDIR")])
-    subprocess.run(["dir", str(pathlib.Path(wheel_directory))])
-
-    print(" ".join([
-        "cl", *(str(e) for e in source),
-        "/LD", "/MD",
-        "/I", include, "/I", "include", "/I", "lib\\stb",
-        "/I", "lib\\libtess2\\Include", "/I", "lib\\sdl\\include", "/I", "lib\\mix\\include",
-        "/link",
-        "/LIBPATH:lib\\sdl\\build\\Release", "SDL3-static.lib",
-        "/LIBPATH:" + sysconfig.get_config_var("LIBDIR"),
-        "user32.lib", "winmm.lib", "advapi32.lib", "ole32.lib", "gdi32.lib",
-        "shell32.lib", "setupapi.lib", "version.lib", "imm32.lib",
-        "/OUT:" + str(pathlib.Path(wheel_directory) / out)
-    ]))
-
-    subprocess.run([
-        "cl", *source,
-        "/LD", "/MD",
-        "/I", include, "/I", "include", "/I", "lib\\stb",
-        "/I", "lib\\libtess2\\Include", "/I", "lib\\sdl\\include", "/I", "lib\\mix\\include",
-        "/link",
-        "/LIBPATH:lib\\sdl\\build\\Release", "SDL3-static.lib",
-        "/LIBPATH:" + sysconfig.get_config_var("LIBDIR"),
-        "user32.lib", "winmm.lib", "advapi32.lib", "ole32.lib", "gdi32.lib",
-        "shell32.lib", "setupapi.lib", "version.lib", "imm32.lib",
-        "/OUT:" + str(pathlib.Path(wheel_directory) / out)
-    ] if sys.platform == "win32" else [
-        *build.split(), *flags.split(), *([
-        "-framework", "GameController",
-        "-framework", "ForceFeedback",
-        "-framework", "AppKit",
-        "-g0",
-        "-Wstrict-prototypes", "-Wsign-compare"
-    ] if sys.platform == "darwin" else []),
-        *source,
-        "-I" + include, "-Iinclude", "-Ilib/stb",
-        "-Ilib/libtess2/Include", "-Ilib/sdl/include", "-Ilib/mix/include",
-        "-Llib/sdl/build", "-lSDL3", "-Llib/mix/build", "-lSDL3_mixer",
-        "-fPIC",
-        "-o", pathlib.Path(wheel_directory) / out
+    subprocess.run(["cmake", "-S", ".", "-B" "build", *arch,
+        "-DBUILD_SHARED_LIBS=OFF",
+        "-DSDL_SHARED=OFF",
+        "-DCMAKE_OSX_ARCHITECTURES=x86_64;arm64",
+        "-DCMAKE_OSX_DEPLOYMENT_TARGET=10.13",
+        "-DCMAKE_POSITION_INDEPENDENT_CODE=ON",
+        "-DCMAKE_PREFIX_PATH=/opt/homebrew",
+        "-DSDL_TESTS=OFF",
+        "-DSDL_CAMERA=OFF",
+        "-DSDL_JOYSTICK=OFF",
+        "-DSDL_HAPTIC=OFF",
+        "-DSDL_HIDAPI=OFF",
+        "-DSDL_POWER=OFF",
+        "-DSDL_SENSOR=OFF",
+        "-DSDL_DIALOG=OFF",
+        "-DSDL_X11=OFF",
+        "-DPYTHON_VERSION=" + name,
+        "-DJOBASE_FILE=" + out,
+        "-DJOBASE_DIR=" + str(pathlib.Path(wheel_directory))
     ])
+
+    subprocess.run(["cmake", "--build", "build", "--config", "Release"])
 
     for path in pathlib.Path("module").rglob("*"):
         if path.suffix in (".pyi", ".png", ".bin", ".wav"):
