@@ -134,7 +134,7 @@ def build_wheel(wheel_directory, config_settings = None, metadata_directory = No
         "Tag: " + tag
     ])
 
-    write(pathlib.Path(wheel_directory) / "__init__" + ext, "__init__" + ext)
+    write(pathlib.Path(wheel_directory) / ("__init__" + ext), "__init__" + ext)
     lines.append(f"JoBase-{VERSION}.dist-info/RECORD,,")
     file.writestr(f"JoBase-{VERSION}.dist-info/RECORD", "\n".join(lines))
 
