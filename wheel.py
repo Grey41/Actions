@@ -28,7 +28,7 @@ def build_wheel(wheel_directory, config_settings = None, metadata_directory = No
 
     def clone(url, name):
         if not pathlib.Path("lib/" + name).exists():
-            subprocess.run(["git", "clone", f"https://github.com/{url}.git", "lib/" + name])
+            subprocess.run(["git", "clone", f"https://github.com/{url}.git", "lib/" + name, "--depth", "1", "--recursive"])
 
     clone("memononen/libtess2", "libtess2")
     clone("libsdl-org/SDL_mixer", "mix")
