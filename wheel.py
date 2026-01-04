@@ -79,8 +79,8 @@ def build_wheel(wheel_directory, config_settings = None, metadata_directory = No
 
     wheel = f"JoBase-{VERSION}-{tag}.whl"
     file = zipfile.ZipFile(pathlib.Path(wheel_directory) / wheel, "w")
+    cmake = [] if sys.platform != "win32" else ["-A", "x64"] if sys.maxsize > 2 ** 32 else ["-A", "Win32"]
     lines = []
-    cmake = [] if sys.maxsize > 2 ** 32 or sys.platform != "win32" else ["-A", "Win32"]
 
     print("CMAKE", cmake)
 
