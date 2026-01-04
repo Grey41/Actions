@@ -17,10 +17,10 @@ jobs:
       matrix:
         os:
           # - [macos-latest, MacOS]
-          # - [windows-latest, Windows Intel]
+          - [windows-latest, Windows Intel]
           # - [windows-11-arm, Windows ARM64]
           # - [ubuntu-latest, Linux Intel] done
-          - [ubuntu-24.04-arm, Linux Arm]
+          # - [ubuntu-24.04-arm, Linux Arm]
 
     steps:
       - name: Checkout
