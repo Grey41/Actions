@@ -53,9 +53,12 @@ def build_wheel(wheel_directory, config_settings = None, metadata_directory = No
     wheel = f"JoBase-{VERSION}-{tag}.whl"
     build = "build/" + platform.machine()
     file = zipfile.ZipFile(pathlib.Path(wheel_directory) / wheel, "w")
-
     lines = []
-    cmake = [] if sys.platform != "win32" else ["-A", "x64"] if sys.maxsize > 2 ** 32 else ["-A", "Win32"]
+
+    cmake = [] if sys.platform != "win32" else [
+        "-A",
+        "Win32" if sys.maxsize < 2 ** 32 else "ARM64" if platform.machine() == "ARM64" else "x64"
+    ]
 
     # cmake = ([] if sys.maxsize > 2 ** 32 or sys.platform != "win32" else ["-A", "Win32"]) + [
     #     f"-DCMAKE_PREFIX_PATH={sdl};{mix}",
