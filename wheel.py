@@ -67,9 +67,6 @@ def build_wheel(wheel_directory, config_settings = None, metadata_directory = No
     base, ext = sysconfig.get_config_vars("installed_base", "EXT_SUFFIX")
     tag = str(next(packaging.tags.sys_tags()))
 
-    # sdl = pathlib.Path("lib/sdl/build").resolve()
-    # mix = pathlib.Path("lib/mix/build").resolve()
-
     wheel = f"JoBase-{VERSION}-{tag}.whl"
     file = zipfile.ZipFile(pathlib.Path(wheel_directory) / wheel, "w")
     lines = []
