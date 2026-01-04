@@ -16,9 +16,9 @@ jobs:
     strategy:
       matrix:
         os:
-          # - [macos-latest, MacOS]
+          - [macos-latest, MacOS]
           - [windows-latest, Windows]
-          #- [ubuntu-latest, Linux]
+          - [ubuntu-latest, Linux]
 
     steps:
       - name: Checkout
@@ -30,7 +30,6 @@ jobs:
           CIBW_PROJECT_REQUIRES_PYTHON: ">=3.13"
           CIBW_ARCHS_MACOS: x86_64 arm64 universal2
           CIBW_ARCHS_LINUX: x86_64 i686 aarch64 ppc64le s390x armv7l riscv64
-          CIBW_ARCHS_WINDOWS: AMD64
 
       - name: Upload
         uses: actions/upload-artifact@v4
