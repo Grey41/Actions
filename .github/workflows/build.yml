@@ -38,6 +38,7 @@ jobs:
           CIBW_PROJECT_REQUIRES_PYTHON: '>=3.13'
           CIBW_ARCHS_MACOS: x86_64 arm64 universal2
           CIBW_ARCHS_LINUX: ${{runner.arch == 'X64' && 'x86_64 i686 ppc64le s390x riscv64' || 'aarch64'}}
+          CIBW_ARCHS_WINDOWS: AMD64 x86
           #aarch64 armv7l
 
       - name: Upload
