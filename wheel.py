@@ -54,7 +54,6 @@ def build_wheel(wheel_directory, config_settings = None, metadata_directory = No
     tag = f"cp{ver}-cp{ver}{abi}-{plat}"
     wheel = f"JoBase-{VERSION}-{tag}.whl"
     file = zipfile.ZipFile(pathlib.Path(wheel_directory) / wheel, "w")
-    # out = "__init__" + ext
 
     lines = []
     arch = [] if sys.maxsize > 2 ** 32 or sys.platform != "win32" else ["-A", "Win32"]
@@ -102,8 +101,6 @@ def build_wheel(wheel_directory, config_settings = None, metadata_directory = No
 
     subprocess.run(["cmake", "-S", ".", "-B" "build", *arch,
         "-DPython3_ROOT_DIR=" + base,
-        # "-DPython3_EXECUTABLE=" + sys.executable,
-        # "-DPYTHON_VERSION=" + name,
         "-DJOBASE_EXT=" + ext,
         "-DJOBASE_DIR=" + str(pathlib.Path(wheel_directory))
     ])
