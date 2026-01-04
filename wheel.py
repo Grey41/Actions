@@ -57,6 +57,16 @@ def build_wheel(wheel_directory, config_settings = None, metadata_directory = No
             "mesa-libEGL-devel"
         ])
 
+        elif shutil.which("pacman"): subprocess.run([
+            "pacman", "-Sy", "--noconfirm",
+            "libxi",
+            "libxinerama",
+            "libxkbcommon",
+            "libxrandr",
+            "wayland",
+            "wayland-protocols"
+        ])
+
     # if not os.environ.get("JOBASE_DEV"):
     #     # if sys.platform == "darwin" and shutil.which("brew"):
     #     #     subprocess.run(["brew", "install", "opus", "flac", "game-music-emu", "mpg123", "fluidsynth", "wavpack"])
