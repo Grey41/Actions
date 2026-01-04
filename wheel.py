@@ -35,14 +35,27 @@ def build_wheel(wheel_directory, config_settings = None, metadata_directory = No
     clone("nothings/stb", "stb")
     clone("JoBase/SDL", "sdl")
 
+    if sys.platform == "linux":
+        if shutil.which("apk"): subprocess.run([
+            "apk", "add", "--no-cache",
+            "libxcursor-dev",
+            "libxkbcommon-dev",
+            "wayland-dev",
+            "wayland-protocols",
+            "mesa-dev",
+            "libdrm-dev"
+        ])
+
+        elif shutil.which("dnf"): subprocess.run([
+            "dnf", "install", "-y",
+            "libXcursor-devel",
+            "libxkbcommon-devel",
+            "wayland-devel",
+            "wayland-protocols-devel",
+            "mesa-libEGL-devel"
+        ])
+
     # if not os.environ.get("JOBASE_DEV"):
-    #     if sys.platform == "linux":
-    #         if shutil.which("apk"):
-    #             subprocess.run(["apk", "add", "--no-cache", "libxkbcommon-dev", "wayland-dev", "wayland-protocols", "mesa-dev", "libdrm-dev"])
-
-    #         elif shutil.which("dnf"):
-    #             subprocess.run(["dnf", "install", "-y", "libxkbcommon-devel", "wayland-devel", "wayland-protocols-devel", "mesa-libEGL-devel"])
-
     #     # if sys.platform == "darwin" and shutil.which("brew"):
     #     #     subprocess.run(["brew", "install", "opus", "flac", "game-music-emu", "mpg123", "fluidsynth", "wavpack"])
 

@@ -16,18 +16,24 @@ jobs:
     strategy:
       matrix:
         os:
-          - [macos-latest, MacOS]
-          - [windows-latest, Windows]
+          # - [macos-latest, MacOS]
+          # - [windows-latest, Windows]
           - [ubuntu-latest, Linux]
 
     steps:
       - name: Checkout
         uses: actions/checkout@v5
 
+      - name: Set up QEMU
+        if: runner.os == 'Linux'
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: all
+
       - name: Build wheels
         uses: pypa/cibuildwheel@v3.3.0
         env:
-          CIBW_PROJECT_REQUIRES_PYTHON: ">=3.13"
+          CIBW_PROJECT_REQUIRES_PYTHON: '>=3.13'
           CIBW_ARCHS_MACOS: x86_64 arm64 universal2
           CIBW_ARCHS_LINUX: x86_64 i686 aarch64 ppc64le s390x armv7l riscv64
 
