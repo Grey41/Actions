@@ -36,8 +36,8 @@ def build_wheel(wheel_directory, config_settings = None, metadata_directory = No
     clone("JoBase/SDL", "sdl")
 
     if sys.platform == "linux":
-        if shutil.which("apt-get"): subprocess.run([
-            "apt-get", "update", "&&", "apt-get", "install", "-y",
+        if shutil.which("apk"): subprocess.run([
+            "apk", "add", "--no-cache",
             "libxi-dev",
             "libxrandr-dev",
             "libxkbcommon-dev",
@@ -57,9 +57,7 @@ def build_wheel(wheel_directory, config_settings = None, metadata_directory = No
             "mesa-libEGL-devel"
         ])
 
-        else: aaaaa
-
-        # elif shutil.which("apt"): subprocess.run([
+        # elif shutil.which("pacman"): subprocess.run([
         #     "pacman", "-Sy", "--noconfirm",
         #     "libxi",
         #     "libxinerama",
