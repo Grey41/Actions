@@ -16,10 +16,10 @@ jobs:
     strategy:
       matrix:
         os:
-          # - [macos-15-intel, MacOS Intel]
+          - [macos-15-intel, MacOS Intel]
           # - [macos-latest, MacOS Silicon] done
-          # - [windows-latest, Windows Intel]
-          - [windows-11-arm, Windows ARM64]
+          - [windows-latest, Windows Intel]
+          # - [windows-11-arm, Windows ARM64] done
           # - [ubuntu-latest, Linux Intel]
           # - [ubuntu-24.04-arm, Linux Arm]
 
@@ -39,7 +39,7 @@ jobs:
           CIBW_PROJECT_REQUIRES_PYTHON: '>=3.13'
           # CIBW_ARCHS_MACOS: ${{runner.arch == 'X64' && 'x86_64' || 'arm64 universal2'}}
           CIBW_ARCHS_LINUX: ${{runner.arch == 'X64' && 'x86_64 i686 ppc64le s390x riscv64' || 'aarch64'}}
-          CIBW_SKIP: 'cp3??t-win*'
+          CIBW_SKIP: 'cp3??t-*'
           #aarch64 armv7l
 
       - name: Upload
