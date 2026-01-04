@@ -1,4 +1,4 @@
-import subprocess, sysconfig, pathlib, sys, zipfile, hashlib, base64, packaging.tags
+import subprocess, sysconfig, pathlib, sys, zipfile, shutil, hashlib, base64, packaging.tags
 
 VERSION = "3.1"
 
