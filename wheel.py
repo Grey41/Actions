@@ -1,4 +1,4 @@
-import subprocess, sysconfig, pathlib, sys, zipfile, hashlib, base64, shutil, os
+import subprocess, sysconfig, pathlib, sys, zipfile, hashlib, base64, packaging.tags, os
 
 VERSION = "3.1"
 
@@ -49,34 +49,29 @@ def build_wheel(wheel_directory, config_settings = None, metadata_directory = No
     #     # if sys.platform == "win32":
     #     #     subprocess.run(["vcpkg", "install", "libvorbis", "libflac", "opus", "mpg123", "libxmp", "fluidsynth", "wavpack"])
 
-    base, ext, ver, abi = sysconfig.get_config_vars("installed_base", "EXT_SUFFIX", "py_version_nodot", "abiflags")
-    plat = os.environ.get("PLAT", sysconfig.get_platform().replace("-", "_").replace(".", "_"))
-    tag = f"cp{ver}-cp{ver}{abi}-{plat}"
+    base, ext = sysconfig.get_config_vars("installed_base", "EXT_SUFFIX")
+    tag = str(next(packaging.tags.sys_tags()))
+
+    # sdl = pathlib.Path("lib/sdl/build").resolve()
+    # mix = pathlib.Path("lib/mix/build").resolve()
+
     wheel = f"JoBase-{VERSION}-{tag}.whl"
     file = zipfile.ZipFile(pathlib.Path(wheel_directory) / wheel, "w")
-
     lines = []
-    arch = [] if sys.maxsize > 2 ** 32 or sys.platform != "win32" else ["-A", "Win32"]
 
-    # os.environ["CMAKE_OSX_ARCHITECTURES"] = "x86_64;arm64"
-    # os.environ["CMAKE_OSX_DEPLOYMENT_TARGET"] = "10.13"
-    # os.environ["CMAKE_POSITION_INDEPENDENT_CODE"] = "ON"
-    # os.environ["CMAKE_BUILD_TYPE"] = "Release"
-    # os.environ["BUILD_SHARED_LIBS"] = "OFF"
+    cmake = [] if sys.maxsize > 2 ** 32 or sys.platform != "win32" else ["-A", "Win32"]
+
+    # cmake = ([] if sys.maxsize > 2 ** 32 or sys.platform != "win32" else ["-A", "Win32"]) + [
+    #     f"-DCMAKE_PREFIX_PATH={sdl};{mix}",
+    #     "-DCMAKE_OSX_ARCHITECTURES=x86_64;arm64",
+    #     "-DCMAKE_OSX_DEPLOYMENT_TARGET=10.13",
+    #     "-DCMAKE_POSITION_INDEPENDENT_CODE=ON",
+    #     "-DCMAKE_BUILD_TYPE=Release",
+    #     "-DBUILD_SHARED_LIBS=OFF"
+    # ]
 
     # if not pathlib.Path("lib/sdl/build").exists():
-    #     # if sys.platform == "linux":
-    #     #     if shutil.which("apk"):
-    #     #         subprocess.run(["apk", "add", "--no-cache", "libxkbcommon-dev", "wayland-dev", "wayland-protocols", "mesa-dev", "libdrm-dev"])
-
-    #     #     elif shutil.which("dnf"):
-    #     #         subprocess.run(["dnf", "install", "-y", "libxkbcommon-devel", "wayland-devel", "wayland-protocols-devel", "mesa-libEGL-devel"])
-
-    #     subprocess.run([
-    #         "cmake", "-S", "lib/sdl", "-B", "lib/sdl/build", *arch,
-    #         "-DSDL_SHARED=OFF",
-    #         "-DSDL_TESTS=OFF",
-    #         "-DSDL_STATIC=ON",
+    #     subprocess.run(["cmake", "-S", "lib/sdl", "-B", "lib/sdl/build", *cmake,
     #         "-DSDL_CAMERA=OFF",
     #         "-DSDL_JOYSTICK=OFF",
     #         "-DSDL_HAPTIC=OFF",
@@ -85,27 +80,24 @@ def build_wheel(wheel_directory, config_settings = None, metadata_directory = No
     #         "-DSDL_SENSOR=OFF",
     #         "-DSDL_DIALOG=OFF",
     #         "-DSDL_TRAY=OFF",
-    #         "-DSDL_X11=OFF"
+    #         "-DSDL_SHARED=OFF",
+    #         "-DSDL_STATIC=ON",
+    #         "-DSDL_TESTS=OFF"
     #     ])
 
     #     subprocess.run(["cmake", "--build", "lib/sdl/build", "--config", "Release"])
 
     # if not pathlib.Path("lib/mix/build").exists():
-    #     subprocess.run([
-    #         "cmake", "-S", "lib/mix", "-B", "lib/mix/build", *arch,
-    #         "-DSDLMIXER_DEPS_SHARED=OFF",
-    #         "-DSDLMIXER_BUILD_SHARED_LIBS=OFF"
-    #     ])
-
+    #     subprocess.run(["cmake", "-S", "lib/mix", "-B", "lib/mix/build", *cmake, "-DSDLMIXER_FLAC_LIBFLAC=OFF"])
     #     subprocess.run(["cmake", "--build", "lib/mix/build", "--config", "Release"])
 
-    subprocess.run(["cmake", "-S", ".", "-B" "build", *arch,
+    subprocess.run(["cmake", "-S", ".", "-B" "build", *cmake,
         "-DPython3_ROOT_DIR=" + base,
         "-DJOBASE_EXT=" + ext,
         "-DJOBASE_DIR=" + str(pathlib.Path(wheel_directory))
     ])
 
-    subprocess.run(["cmake", "--build", "build", "--config", "Release", "--verbose"])
+    subprocess.run(["cmake", "--build", "build", "--config", "Release"])
     print("---------", str(pathlib.Path(wheel_directory)), ext)
     subprocess.run(["ls", str(pathlib.Path(wheel_directory))])
 

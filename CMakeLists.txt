@@ -23,8 +23,8 @@ set(SDLMIXER_FLAC_LIBFLAC OFF CACHE BOOL "" FORCE)
 project(JoBase)
 find_package(Python3 COMPONENTS Development.Module REQUIRED)
 
-add_subdirectory(lib/sdl)
-add_subdirectory(lib/mix)
+add_subdirectory(lib/sdl EXCLUDE_FROM_ALL)
+add_subdirectory(lib/mix EXCLUDE_FROM_ALL)
 
 file(GLOB SOURCES src/*.c lib/libtess2/Source/*.c)
 add_library(JoBase MODULE ${SOURCES})
