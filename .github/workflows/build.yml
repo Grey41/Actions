@@ -16,9 +16,9 @@ jobs:
     strategy:
       matrix:
         os:
-          - [macos-15-intel, MacOS Intel]
-          - [macos-latest, MacOS Silicon]
-          # - [windows-latest, Windows Intel]
+          # - [macos-15-intel, MacOS Intel]
+          # - [macos-latest, MacOS Silicon]
+          - [windows-latest, Windows Intel]
           # - [windows-11-arm, Windows ARM64]
           # - [ubuntu-latest, Linux Intel]
           # - [ubuntu-24.04-arm, Linux Arm]
