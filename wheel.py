@@ -82,8 +82,6 @@ def build_wheel(wheel_directory, config_settings = None, metadata_directory = No
     cmake = [] if sys.platform != "win32" else ["-A", "x64"] if sys.maxsize > 2 ** 32 else ["-A", "Win32"]
     lines = []
 
-    print("CMAKE", cmake)
-
     # cmake = ([] if sys.maxsize > 2 ** 32 or sys.platform != "win32" else ["-A", "Win32"]) + [
     #     f"-DCMAKE_PREFIX_PATH={sdl};{mix}",
     #     "-DCMAKE_OSX_ARCHITECTURES=x86_64;arm64",
@@ -114,13 +112,13 @@ def build_wheel(wheel_directory, config_settings = None, metadata_directory = No
     #     subprocess.run(["cmake", "-S", "lib/mix", "-B", "lib/mix/build", *cmake, "-DSDLMIXER_FLAC_LIBFLAC=OFF"])
     #     subprocess.run(["cmake", "--build", "lib/mix/build", "--config", "Release"])
 
-    subprocess.run(["cmake", "-S", ".", "-B" "build", *cmake,
+    subprocess.run(["cmake", "-S", ".", "-B", tag, *cmake,
         "-DPython3_ROOT_DIR=" + base,
         "-DJOBASE_EXT=" + ext,
         "-DJOBASE_DIR=" + str(pathlib.Path(wheel_directory))
     ])
 
-    subprocess.run(["cmake", "--build", "build", "--config", "Release", "--verbose"])
+    subprocess.run(["cmake", "--build", tag, "--config", "Release"])
     print("---------", str(pathlib.Path(wheel_directory)), ext)
     subprocess.run(["ls", str(pathlib.Path(wheel_directory))])
 
