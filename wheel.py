@@ -39,6 +39,7 @@ def build_wheel(wheel_directory, config_settings = None, metadata_directory = No
         if shutil.which("apk"): subprocess.run([
             "apk", "add", "--no-cache",
             "libxcursor-dev",
+            "libxi-dev",
             "libxkbcommon-dev",
             "wayland-dev",
             "wayland-protocols",
@@ -49,6 +50,7 @@ def build_wheel(wheel_directory, config_settings = None, metadata_directory = No
         elif shutil.which("dnf"): subprocess.run([
             "dnf", "install", "-y",
             "libXcursor-devel",
+            "libXi-devel",
             "libxkbcommon-devel",
             "wayland-devel",
             "wayland-protocols-devel",
