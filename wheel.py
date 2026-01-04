@@ -36,8 +36,8 @@ def build_wheel(wheel_directory, config_settings = None, metadata_directory = No
     clone("JoBase/SDL", "sdl")
 
     if sys.platform == "linux":
-        if shutil.which("apk"): subprocess.run([
-            "apk", "add", "--no-cache",
+        if shutil.which("apt-get"): subprocess.run([
+            "apt-get", "update", "&&", "apt-get", "install", "-y",
             "libxi-dev",
             "libxrandr-dev",
             "libxkbcommon-dev",
@@ -57,15 +57,17 @@ def build_wheel(wheel_directory, config_settings = None, metadata_directory = No
             "mesa-libEGL-devel"
         ])
 
-        elif shutil.which("pacman"): subprocess.run([
-            "pacman", "-Sy", "--noconfirm",
-            "libxi",
-            "libxinerama",
-            "libxkbcommon",
-            "libxrandr",
-            "wayland",
-            "wayland-protocols"
-        ])
+        else: aaaaa
+
+        # elif shutil.which("apt"): subprocess.run([
+        #     "pacman", "-Sy", "--noconfirm",
+        #     "libxi",
+        #     "libxinerama",
+        #     "libxkbcommon",
+        #     "libxrandr",
+        #     "wayland",
+        #     "wayland-protocols"
+        # ])
 
     # if not os.environ.get("JOBASE_DEV"):
     #     # if sys.platform == "darwin" and shutil.which("brew"):
