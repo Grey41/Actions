@@ -30,33 +30,6 @@ def build_wheel(wheel_directory, config_settings = None, metadata_directory = No
         if not pathlib.Path("lib/" + name).exists():
             subprocess.run(["git", "clone", f"https://github.com/{url}.git", "lib/" + name, "--depth", "1", "--recursive"])
 
-    clone("memononen/libtess2", "libtess2")
-    clone("libsdl-org/SDL_mixer", "mix")
-    clone("nothings/stb", "stb")
-    clone("JoBase/SDL", "sdl")
-
-    if sys.platform == "linux":
-        if shutil.which("apk"): subprocess.run([
-            "apk", "add", "--no-cache",
-            "libxi-dev",
-            "libxrandr-dev",
-            "libxkbcommon-dev",
-            "wayland-dev",
-            "wayland-protocols",
-            "mesa-dev",
-            "libdrm-dev"
-        ])
-
-        elif shutil.which("dnf"): subprocess.run([
-            "dnf", "install", "-y",
-            "libXi-devel",
-            "libXrandr-devel",
-            "libxkbcommon-devel",
-            "wayland-devel",
-            "wayland-protocols-devel",
-            "mesa-libEGL-devel"
-        ])
-
         # elif shutil.which("pacman"): subprocess.run([
         #     "pacman", "-Sy", "--noconfirm",
         #     "libxi",
@@ -116,7 +89,34 @@ def build_wheel(wheel_directory, config_settings = None, metadata_directory = No
 
     print("BASE", base)
     print("CMAKE", cmake)
-    #"-S", ".", "-B", tag, 
+    #"-S", ".", "-B", tag,
+
+    clone("memononen/libtess2", "libtess2")
+    clone("libsdl-org/SDL_mixer", "mix")
+    clone("nothings/stb", "stb")
+    clone("JoBase/SDL", "sdl")
+
+    if sys.platform == "linux":
+        if shutil.which("apk"): subprocess.run([
+            "apk", "add", "--no-cache",
+            "libxi-dev",
+            "libxrandr-dev",
+            "libxkbcommon-dev",
+            "wayland-dev",
+            "wayland-protocols",
+            "mesa-dev",
+            "libdrm-dev"
+        ])
+
+        elif shutil.which("dnf"): subprocess.run([
+            "dnf", "install", "-y",
+            "libXi-devel",
+            "libXrandr-devel",
+            "libxkbcommon-devel",
+            "wayland-devel",
+            "wayland-protocols-devel",
+            "mesa-libEGL-devel"
+        ])
 
     subprocess.run(["cmake", "-S", ".", "-B", build, *cmake,
         "-DPython3_ROOT_DIR=" + base,
