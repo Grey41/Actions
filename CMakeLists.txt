@@ -33,7 +33,7 @@ set(SDLMIXER_MP3_MPG123 OFF CACHE BOOL "" FORCE)
 set(SDLMIXER_FLAC_LIBFLAC OFF CACHE BOOL "" FORCE)
 
 project(JoBase)
-find_package(Python3 COMPONENTS Development REQUIRED)
+find_package(Python3 COMPONENTS Development.Module REQUIRED)
 
 add_subdirectory(lib/sdl EXCLUDE_FROM_ALL)
 add_subdirectory(lib/mix EXCLUDE_FROM_ALL)
