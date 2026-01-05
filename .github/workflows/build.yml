@@ -39,6 +39,7 @@ jobs:
           CIBW_PROJECT_REQUIRES_PYTHON: '>=3.13'
           CIBW_ARCHS_LINUX: ${{runner.arch == 'X64' && 'x86_64 i686 ppc64le s390x riscv64' || 'aarch64'}}
           CIBW_SKIP: cp3??t-*
+          CIBW_BUILD: cp313-win_amd64*
           #aarch64 armv7l
 
       - name: Upload
@@ -67,4 +68,4 @@ jobs:
       - name: Publish
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
-          repository-url: https://test.pypi.org/legacy
+          repository-url: https://test.pypi.org/legacy/
