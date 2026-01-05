@@ -16,12 +16,12 @@ jobs:
     strategy:
       matrix:
         os:
-          # - [macos-15-intel, MacOS Intel]
+          - [macos-15-intel, MacOS Intel]
           # - [macos-latest, MacOS Silicon] done
-          - [windows-latest, Windows Intel]
+          # - [windows-latest, Windows Intel] done
           # - [windows-11-arm, Windows ARM64] done
-          # - [ubuntu-latest, Linux Intel]
-          # - [ubuntu-24.04-arm, Linux Arm]
+          - [ubuntu-latest, Linux Intel]
+          - [ubuntu-24.04-arm, Linux Arm]
 
     steps:
       - name: Checkout

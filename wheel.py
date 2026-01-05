@@ -30,23 +30,6 @@ def build_wheel(wheel_directory, config_settings = None, metadata_directory = No
         if not pathlib.Path("lib/" + name).exists():
             subprocess.run(["git", "clone", f"https://github.com/{url}.git", "lib/" + name, "--depth", "1", "--recursive"])
 
-        # elif shutil.which("pacman"): subprocess.run([
-        #     "pacman", "-Sy", "--noconfirm",
-        #     "libxi",
-        #     "libxinerama",
-        #     "libxkbcommon",
-        #     "libxrandr",
-        #     "wayland",
-        #     "wayland-protocols"
-        # ])
-
-    # if not os.environ.get("JOBASE_DEV"):
-    #     # if sys.platform == "darwin" and shutil.which("brew"):
-    #     #     subprocess.run(["brew", "install", "opus", "flac", "game-music-emu", "mpg123", "fluidsynth", "wavpack"])
-
-    #     # if sys.platform == "win32":
-    #     #     subprocess.run(["vcpkg", "install", "libvorbis", "libflac", "opus", "mpg123", "libxmp", "fluidsynth", "wavpack"])
-
     base, ext = sysconfig.get_config_vars("installed_base", "EXT_SUFFIX")
     tag = next(packaging.tags.sys_tags())
 
@@ -59,40 +42,6 @@ def build_wheel(wheel_directory, config_settings = None, metadata_directory = No
         "-A",
         "Win32" if sys.maxsize < 2 ** 32 else "ARM64" if platform.machine() == "ARM64" else "x64"
     ]
-
-    # cmake = ([] if sys.maxsize > 2 ** 32 or sys.platform != "win32" else ["-A", "Win32"]) + [
-    #     f"-DCMAKE_PREFIX_PATH={sdl};{mix}",
-    #     "-DCMAKE_OSX_ARCHITECTURES=x86_64;arm64",
-    #     "-DCMAKE_OSX_DEPLOYMENT_TARGET=10.13",
-    #     "-DCMAKE_POSITION_INDEPENDENT_CODE=ON",
-    #     "-DCMAKE_BUILD_TYPE=Release",
-    #     "-DBUILD_SHARED_LIBS=OFF"
-    # ]
-
-    # if not pathlib.Path("lib/sdl/build").exists():
-    #     subprocess.run(["cmake", "-S", "lib/sdl", "-B", "lib/sdl/build", *cmake,
-    #         "-DSDL_CAMERA=OFF",
-    #         "-DSDL_JOYSTICK=OFF",
-    #         "-DSDL_HAPTIC=OFF",
-    #         "-DSDL_HIDAPI=OFF",
-    #         "-DSDL_POWER=OFF",
-    #         "-DSDL_SENSOR=OFF",
-    #         "-DSDL_DIALOG=OFF",
-    #         "-DSDL_TRAY=OFF",
-    #         "-DSDL_SHARED=OFF",
-    #         "-DSDL_STATIC=ON",
-    #         "-DSDL_TESTS=OFF"
-    #     ])
-
-    #     subprocess.run(["cmake", "--build", "lib/sdl/build", "--config", "Release"])
-
-    # if not pathlib.Path("lib/mix/build").exists():
-    #     subprocess.run(["cmake", "-S", "lib/mix", "-B", "lib/mix/build", *cmake, "-DSDLMIXER_FLAC_LIBFLAC=OFF"])
-    #     subprocess.run(["cmake", "--build", "lib/mix/build", "--config", "Release"])
-
-    print("BASE", base)
-    print("CMAKE", cmake)
-    #"-S", ".", "-B", tag,
 
     clone("memononen/libtess2", "libtess2")
     clone("libsdl-org/SDL_mixer", "mix")
@@ -127,7 +76,7 @@ def build_wheel(wheel_directory, config_settings = None, metadata_directory = No
         "-DJOBASE_DIR=" + str(pathlib.Path(wheel_directory))
     ])
 
-    subprocess.run(["cmake", "--build", build, "--config", "Release", "--verbose"])
+    subprocess.run(["cmake", "--build", build, "--config", "Release"])
     subprocess.run(["ls", str(pathlib.Path(wheel_directory))])
 
     for path in pathlib.Path("module").rglob("*"):
