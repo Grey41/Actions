@@ -34,7 +34,7 @@ def build_wheel(wheel_directory, config_settings = None, metadata_directory = No
     base, ext = sysconfig.get_config_vars("installed_base", "EXT_SUFFIX")
     tag = next(packaging.tags.sys_tags())
 
-    wheel = f"{NAME}-{VERSION}-{tag}.whl"
+    wheel = f"{NAME.lower()}-{VERSION}-{tag}.whl"
     build = "build/" + tag.platform
     file = zipfile.ZipFile(pathlib.Path(wheel_directory) / wheel, "w")
     lines = []
