@@ -76,7 +76,7 @@ def build_wheel(wheel_directory, config_settings = None, metadata_directory = No
         "-DJOBASE_DIR=" + str(pathlib.Path(wheel_directory))
     ])
 
-    subprocess.run(["cmake", "--build", build, "--config", "Release"])
+    subprocess.run(["cmake", "--build", build, "--config", "Release", "--verbose"])
     subprocess.run(["ls", str(pathlib.Path(wheel_directory))])
 
     for path in pathlib.Path("module").rglob("*"):
