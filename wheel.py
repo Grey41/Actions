@@ -84,7 +84,7 @@ def build_wheel(wheel_directory, config_settings = None, metadata_directory = No
         if path.suffix in (".pyi", ".png", ".bin", ".wav"):
             write(path, pathlib.Path(*path.parts[1:]))
 
-    writestr(f"{NAME}-{VERSION}.dist-info/METADATA", [
+    writestr(f"{NAME.lower()}-{VERSION}.dist-info/METADATA", [
         "Metadata-Version: 2.1",
         "Name: " + NAME,
         "Version: " + VERSION,
