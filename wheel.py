@@ -85,13 +85,40 @@ def build_wheel(wheel_directory, config_settings = None, metadata_directory = No
 
     writestr(f"JoBase-{VERSION}.dist-info/METADATA", [
         "Metadata-Version: 2.1",
-        "Name: JoBase",
+        "Name: JoBase-test",
         "Version: " + VERSION,
+        "Description-Content-Type: text/x-rst",
         "Summary: JoBase is a fast Python game library for beginner coders",
         "Keywords: game engine learn beginner",
         "Home-page: https://jobase.org",
         "Author: Reuben Grey Ford",
-        "Author-email: <hello@jobase.org>"
+        "Author-email: <hello@jobase.org>",
+        "",
+        "======",
+        "JoBase",
+        "======",
+        "",
+        "Welcome to JoBase, the fastest Python game framework.",
+        "",
+        "Features",
+        "========",
+        "",
+        "* Beginner friendly",
+        "* Fast",
+        "* Works on Windows, Linux, MacOS, and all modern browsers",
+        "",
+        "Installation",
+        "============",
+        "",
+        "If you already have Python installed, you can install JoBase with pip.",
+        ".. code-block:: python3",
+        "",
+        "    pip install JoBase",
+        "",
+        "Run Python Online",
+        "=================",
+        "",
+        "If you don't want to install Python, and you're happy to code online, you can run the examples on `the website <https://jobase.org>`__."
     ])
 
     writestr(f"JoBase-{VERSION}.dist-info/WHEEL", [
