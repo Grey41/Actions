@@ -52,7 +52,7 @@ jobs:
     name: Upload Wheels
     needs: wheels
     runs-on: ubuntu-latest
-    if: ${{github.event.inputs.upload == 'true'}}
+    # if: ${{github.event.inputs.upload == 'true'}}
 
     permissions:
       id-token: write
