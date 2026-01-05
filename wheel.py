@@ -1,4 +1,4 @@
-import subprocess, sysconfig, pathlib, sys, zipfile, shutil, hashlib, base64, packaging.tags, platform
+import packaging.tags, subprocess, sysconfig, pathlib, sys, zipfile, shutil, hashlib, base64, platform
 
 VERSION = "3.1"
 NAME = "JoBase_test"
