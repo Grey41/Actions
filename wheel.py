@@ -122,7 +122,7 @@ def build_wheel(wheel_directory, config_settings = None, metadata_directory = No
         "If you don't want to install Python, and you're happy to code online, you can run the examples on `the website <https://jobase.org>`__."
     ])
 
-    writestr(f"{NAME}-{VERSION}.dist-info/WHEEL", [
+    writestr(f"{NAME.lower()}-{VERSION}.dist-info/WHEEL", [
         "Wheel-Version: 1.0",
         f"Generator: {NAME} {VERSION}",
         "Root-Is-Purelib: false",
@@ -130,7 +130,7 @@ def build_wheel(wheel_directory, config_settings = None, metadata_directory = No
     ])
 
     write(pathlib.Path(wheel_directory) / ("__init__" + ext), "__init__" + ext)
-    lines.append(f"{NAME}-{VERSION}.dist-info/RECORD,,")
-    file.writestr(f"{NAME}-{VERSION}.dist-info/RECORD", "\n".join(lines))
+    lines.append(f"{NAME.lower()}-{VERSION}.dist-info/RECORD,,")
+    file.writestr(f"{NAME.lower()}-{VERSION}.dist-info/RECORD", "\n".join(lines))
 
     return wheel
