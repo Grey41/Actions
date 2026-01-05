@@ -48,10 +48,10 @@ def build_wheel(wheel_directory, config_settings = None, metadata_directory = No
     #     #     subprocess.run(["vcpkg", "install", "libvorbis", "libflac", "opus", "mpg123", "libxmp", "fluidsynth", "wavpack"])
 
     base, ext = sysconfig.get_config_vars("installed_base", "EXT_SUFFIX")
-    tag = str(next(packaging.tags.sys_tags()))
+    tag = next(packaging.tags.sys_tags())
 
     wheel = f"JoBase-{VERSION}-{tag}.whl"
-    build = "build/" + platform.machine()
+    build = "build/" + tag.platform
     file = zipfile.ZipFile(pathlib.Path(wheel_directory) / wheel, "w")
     lines = []
 
@@ -149,7 +149,7 @@ def build_wheel(wheel_directory, config_settings = None, metadata_directory = No
         "Wheel-Version: 1.0",
         "Generator: JoBase " + VERSION,
         "Root-Is-Purelib: false",
-        "Tag: " + tag
+        "Tag: " + str(tag)
     ])
 
     write(pathlib.Path(wheel_directory) / ("__init__" + ext), "__init__" + ext)
