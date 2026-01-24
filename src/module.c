@@ -526,6 +526,8 @@ static bool run(double time, PyObject *loop) {
 static PyObject *module_run(PyObject *self, PyObject *ignored) {
     PyObject *loop;
 
+    printf("run\n");
+
     if (PyObject_GetOptionalAttrString(program, "loop", &loop) >= 0) {
         if (SDL_ShowWindow(window.sdl)) {
 #ifdef __EMSCRIPTEN__
@@ -580,6 +582,7 @@ static int module_exec(PyObject *self) {
             SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE) &&
             SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 0)
         ) {
+            printf("1\n");
 #ifdef __EMSCRIPTEN__
             window.sdl = SDL_CreateWindow(NULL, width(), height(), SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIGH_PIXEL_DENSITY);
 #else
@@ -591,6 +594,8 @@ static int module_exec(PyObject *self) {
                 (window.ratio = SDL_GetWindowPixelDensity(window.sdl)) &&
                 SDL_GL_SetSwapInterval(1)
             ) {
+                printf("2\n");
+
                 shader.active = 0;
                 shader.array = 0;
                 shader.texture = 0;
@@ -608,6 +613,8 @@ static int module_exec(PyObject *self) {
                     PyErr_SetString(PyExc_OSError, "Failed to load OpenGL");
                     goto fail;
                 }
+
+                printf("3\n");
 
                 PyObject *file = PyObject_GetAttrString(self, "__file__");
 
@@ -633,6 +640,8 @@ static int module_exec(PyObject *self) {
                 Py_DECREF(file);
 #endif
                 CHECK(!(program = PyImport_AddModuleRef("__main__")))
+
+                printf("4\n");
 
                 TYPE(window_data, NULL)
                 TYPE(vector_data, NULL)
@@ -663,6 +672,8 @@ static int module_exec(PyObject *self) {
                 CHECK(PyModule_AddIntConstant(program, "SERIF", 2))
                 CHECK(PyModule_AddIntConstant(program, "DISPLAY", 3))
                 CHECK(PyModule_AddIntConstant(program, "PIXEL", 4))
+
+                printf("5\n");
 
                 // CHECK(PyModule_AddIntConstant(program, "ADDITIVE", ADDITIVE))
                 // CHECK(PyModule_AddIntConstant(program, "MULTIPLY", MULTIPLY))
@@ -835,6 +846,8 @@ static int module_exec(PyObject *self) {
                         "frag = texture(sampler, st);"
                     "}");
 
+                printf("6\n");
+
                 create(&shader.plain, vert_norm, frag_norm);
                 create(&shader.image, vert_img, frag_img);
                 create(&shader.circle, vert_circle, frag_circle);
@@ -898,6 +911,8 @@ static int module_exec(PyObject *self) {
                             "pixel = merge(pixel, texture(sampler, .5 + uv), data[i].mode);"
                         "}"*/
 
+                printf("7\n");
+
                 glGenVertexArrays(1, &shader.vao);
                 glGenBuffers(2, buffers);
 
@@ -936,10 +951,15 @@ static int module_exec(PyObject *self) {
                     button[i].key = &buttons[i];
                 }
 
+                printf("8\n");
+
                 ADD("camera", PyObject_CallObject((PyObject *) camera_data.type, NULL))
                 ADD("window", PyObject_CallObject((PyObject *) window_data.type, NULL))
                 ADD("mouse", PyObject_CallObject((PyObject *) mouse_data.type, NULL))
                 ADD("key", PyObject_CallObject((PyObject *) key_data.type, NULL))
+
+                printf("9\n");
+
                 ADD("Rect", (PyObject *) rect_data.type)
                 ADD("Shape", (PyObject *) shape_data.type)
                 ADD("Line", (PyObject *) line_data.type)
@@ -948,6 +968,8 @@ static int module_exec(PyObject *self) {
                 ADD("Text", (PyObject *) text_data.type)
                 ADD("Sound", (PyObject *) sound_data.type)
                 ADD("Screen", (PyObject *) screen_data.type)
+
+                printf("10\n");
 
                 ADD("WHITE", COLOR(1, 1, 1))
                 ADD("BLACK", COLOR(0, 0, 0))
@@ -974,6 +996,8 @@ static int module_exec(PyObject *self) {
                 ADD("PURPLE", COLOR(.5, 0, 1))
                 ADD("PINK", COLOR(1, .75, .8))
                 ADD("MAGENTA", COLOR(1, 0, 1))
+
+                printf("11\n");
 
                 qsort(keys, LEN(keys), sizeof(Key), (int (*)(const void *, const void *)) compare);
                 qsort(mods, LEN(mods), sizeof(Key), (int (*)(const void *, const void *)) compare);
