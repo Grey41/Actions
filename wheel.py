@@ -1,7 +1,7 @@
 import packaging.tags, subprocess, sysconfig, pathlib, sys, zipfile, shutil, hashlib, base64, platform
 
 VERSION = "3.1"
-NAME = "JoBase_test"
+NAME = "JoBase"
 
 def build_wheel(wheel_directory, config_settings = None, metadata_directory = None):
     def write(src, path):
@@ -78,7 +78,6 @@ def build_wheel(wheel_directory, config_settings = None, metadata_directory = No
     ])
 
     subprocess.run(["cmake", "--build", build, "--config", "Release"])
-    subprocess.run(["ls", str(pathlib.Path(wheel_directory))])
 
     for path in pathlib.Path("module").rglob("*"):
         if path.suffix in (".pyi", ".png", ".bin", ".wav"):
@@ -95,10 +94,6 @@ def build_wheel(wheel_directory, config_settings = None, metadata_directory = No
         "Author: Reuben Grey Ford",
         "Author-email: <hello@jobase.org>",
         "",
-        "======",
-        "JoBase",
-        "======",
-        "",
         "Welcome to JoBase, the fastest Python game framework.",
         "",
         "Features",
@@ -111,8 +106,7 @@ def build_wheel(wheel_directory, config_settings = None, metadata_directory = No
         "Installation",
         "============",
         "",
-        "If you already have Python installed, you can install JoBase with pip.",
-        ".. code-block:: python3",
+        "If you already have Python installed, you can install JoBase with pip.::",
         "",
         "    pip install JoBase",
         "",

@@ -1,10 +1,18 @@
 #define DEL(e, n) if(!e)return PyErr_SetString(PyExc_AttributeError,"Cannot delete the '"n"' attribute"),-1;
-#define REM(t, l, e) if (l==e)l=l->next;else for(t*i=l;i;i=i->next)if(i->next==e){i->next=i->next->next;break;}
 #define INIT(e) if(e)return-1;
 #define ERR(e) ((e)==-1&&PyErr_Occurred())
 #define MIN(a, b) (a<b?a:b)
 #define MAX(a, b) (a>b?a:b)
 #define LEN(e) sizeof e/sizeof*e
+
+#define MAN "images/man.png"
+#define COIN "images/coin.png"
+#define ENEMY "images/enemy.png"
+#define PICKUP "audio/pickup.wav"
+#define BLIP "audio/blip.wav"
+
+#define BLUR 1
+#define WARP 2
 #define _USE_MATH_DEFINES
 
 #ifdef __EMSCRIPTEN__
@@ -26,6 +34,35 @@ extern uint32_t height(void);
 #include <tesselator.h>
 #include <stb_image.h>
 #include <stb_image_write.h>
+
+#if PY_VERSION_HEX < 0x30a0000 // 3.10
+static inline PyObject *_Py_NewRef(PyObject *e) {
+    return Py_INCREF(e), e;
+}
+
+#define Py_NewRef(e) _Py_NewRef((PyObject*)e)
+#endif
+
+#if PY_VERSION_HEX < 0x30d0000 // 3.13
+static inline int PyObject_GetOptionalAttrString(PyObject *obj, const char *name, PyObject **res) {
+    return (*res = PyObject_GetAttrString(obj, name)) ? 1 : PyErr_ExceptionMatches(PyExc_AttributeError) ? (PyErr_Clear(), 0) : -1;
+}
+
+static inline PyObject *PyImport_AddModuleRef(const char *name) {
+    return Py_NewRef(PyImport_AddModule(name));
+}
+
+static inline int PyModule_Add(PyObject *module, const char *name, PyObject *value) {
+    if (PyModule_AddObject(module, name, value)) {
+        Py_XDECREF(value);
+        return -1;
+    }
+
+    return 0;
+}
+
+#define PyLong_AsInt(e) (int)PyLong_AsLong(e)
+#endif
 
 enum {x, y, z, w};
 enum {r, g, b, a};
@@ -52,6 +89,8 @@ typedef struct Text Text;
 typedef struct Sound Sound;
 typedef struct Screen Screen;
 typedef struct Spec Spec;
+typedef struct Filter Filter;
+typedef struct Program Program;
 
 struct Vec2 {
     double x;
@@ -186,7 +225,8 @@ struct Sound {
 struct Screen {
     Rect base;
     GLuint buffer;
-    GLuint texture;
+    GLuint a;
+    GLuint b;
 };
 
 struct Key {
@@ -207,6 +247,12 @@ struct Program {
     GLuint src;
     GLint obj;
     GLint color;
+    GLint size;
+};
+
+struct Filter {
+    GLuint src;
+    GLint data;
 };
 
 struct Spec {
@@ -227,7 +273,6 @@ extern struct Window {
 extern struct Camera {
     Vec2 pos;
     Vec2 scale;
-    char flip;
 } camera;
 
 extern struct Mouse {
@@ -250,12 +295,17 @@ extern struct Keyboard {
 } keyboard;
 
 extern struct Shader {
-    struct Program plain;
-    struct Program image;
-    struct Program circle;
-    struct Program text;
+    Program *active;
+    Screen *screen;
+    Program plain;
+    Program image;
+    Program circle;
+    Program text;
+    Filter warp;
     GLuint ubo;
     GLuint vao;
+    GLuint array;
+    GLuint texture;
 } shader;
 
 extern struct Path {
@@ -299,7 +349,7 @@ extern Vec2 *shape_points(Shape *);
 extern Vec2 circle_pos(Circle *);
 
 extern void base_trans(Base *, Vec2 *, Vec2 *, size_t);
-extern void base_matrix(Base *, GLint, GLint, double, double);
+extern void base_matrix(Base *, Program *, double, double);
 extern void base_rect(Base *, Vec2 *, double, double);
 extern double base_radius(Base *, double);
 extern double rect_y(Base *, double, double, char);
@@ -326,4 +376,33 @@ static inline Vec2 norm(double x, double y) {
     Vec2 value = {len ? x / len : 0, len ? y / len : 0};
 
     return value;
+}
+
+static inline void use(Program *program) {
+    if (program != shader.active) {
+        glUseProgram((shader.active = program) -> src);
+        glUniform2f(program -> size, shader.screen ? shader.screen -> base.size.x : window.size.x, shader.screen ? -shader.screen -> base.size.y : window.size.y);
+    }
+}
+
+static inline void array(GLuint vao) {
+    if (vao != shader.array)
+        glBindVertexArray(shader.array = vao);
+}
+
+static inline void texture(GLuint src) {
+    if (src != shader.texture)
+        glBindTexture(GL_TEXTURE_2D, shader.texture = src);
+}
+
+static inline void unbind(void) {
+    if (shader.screen) {
+        shader.screen = NULL;
+
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        glViewport(0, 0, window.size.x * window.ratio, window.size.y * window.ratio);
+
+        if (shader.active)
+            glUniform2f(shader.active -> size, window.size.x, window.size.y);
+    }
 }
