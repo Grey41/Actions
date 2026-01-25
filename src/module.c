@@ -379,6 +379,8 @@ static Key *search(uint32_t code, Key *list, size_t size) {
 }
 
 static GLuint compile(GLenum type, const GLchar *source) {
+    printf("create shader\n");
+
     GLuint shader = glCreateShader(type);
 
     glShaderSource(shader, 1, &source, NULL);
@@ -397,6 +399,8 @@ static GLuint compile(GLenum type, const GLchar *source) {
 }
 
 static void create(Program *program, GLuint vert, GLuint frag) {
+    printf("start program\n");
+
     glAttachShader(program -> src = glCreateProgram(), vert);
     glAttachShader(program -> src, frag);
     glLinkProgram(program -> src);
@@ -849,7 +853,7 @@ static int module_exec(PyObject *self) {
                         "frag = texture(sampler, st);"
                     "}");
 
-                printf("6\n");
+                printf("6.0\n");
 
                 create(&shader.plain, vert_norm, frag_norm);
                 printf("6.1\n");

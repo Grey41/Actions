@@ -3,6 +3,9 @@ import packaging.tags, subprocess, sysconfig, pathlib, sys, zipfile, shutil, has
 VERSION = "3.1"
 NAME = "JoBase"
 
+# scp /Users/nathanford/Downloads/jobase-3.1-cp313-cp313-win_amd64.whl administrator@192.168.0.16:/Users/natha/Desktop
+# /Users/natha/AppData/Local/Microsoft/WindowsApps/python.exe -m pip install /Users/natha/Desktop/jobase-3.1-cp313-cp313-win_amd64.whl --force-reinstall
+
 def build_wheel(wheel_directory, config_settings = None, metadata_directory = None):
     def write(src, path):
         file.write(src, pathlib.Path("JoBase") / path)
