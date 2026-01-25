@@ -399,15 +399,13 @@ static GLuint compile(GLenum type, const GLchar *source) {
 }
 
 static void create(Program *program, GLuint vert, GLuint frag) {
-    printf("start program\n");
-
     glAttachShader(program -> src = glCreateProgram(), vert);
     glAttachShader(program -> src, frag);
     glLinkProgram(program -> src);
 
-    printf("create before\n");
+    printf("create before uniform block binding\n");
     glUniformBlockBinding(program -> src, glGetUniformBlockIndex(program -> src, "camera"), 0);
-    printf("create after\n");
+    printf("done\n");
 
     program -> obj = glGetUniformLocation(program -> src, "object");
     program -> size = glGetUniformLocation(program -> src, "size");
@@ -585,11 +583,10 @@ static int module_exec(PyObject *self) {
             SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) && MIX_Init() &&
             SDL_SetHint(SDL_HINT_EMSCRIPTEN_KEYBOARD_ELEMENT, "#canvas") &&
             SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3) &&
-            SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0) &&
+            SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3) &&
             SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE) &&
             SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 0)
         ) {
-            printf("1\n");
 #ifdef __EMSCRIPTEN__
             window.sdl = SDL_CreateWindow(NULL, width(), height(), SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIGH_PIXEL_DENSITY);
 #else
@@ -601,8 +598,6 @@ static int module_exec(PyObject *self) {
                 (window.ratio = SDL_GetWindowPixelDensity(window.sdl)) &&
                 SDL_GL_SetSwapInterval(1)
             ) {
-                printf("2\n");
-
                 shader.active = 0;
                 shader.array = 0;
                 shader.texture = 0;
@@ -620,8 +615,6 @@ static int module_exec(PyObject *self) {
                     PyErr_SetString(PyExc_OSError, "Failed to load OpenGL");
                     goto fail;
                 }
-
-                printf("3\n");
 
                 PyObject *file = PyObject_GetAttrString(self, "__file__");
 
@@ -647,8 +640,6 @@ static int module_exec(PyObject *self) {
                 Py_DECREF(file);
 #endif
                 CHECK(!(program = PyImport_AddModuleRef("__main__")))
-
-                printf("4\n");
 
                 TYPE(window_data, NULL)
                 TYPE(vector_data, NULL)
@@ -679,8 +670,6 @@ static int module_exec(PyObject *self) {
                 CHECK(PyModule_AddIntConstant(program, "SERIF", 2))
                 CHECK(PyModule_AddIntConstant(program, "DISPLAY", 3))
                 CHECK(PyModule_AddIntConstant(program, "PIXEL", 4))
-
-                printf("5\n");
 
                 // CHECK(PyModule_AddIntConstant(program, "ADDITIVE", ADDITIVE))
                 // CHECK(PyModule_AddIntConstant(program, "MULTIPLY", MULTIPLY))
@@ -852,8 +841,6 @@ static int module_exec(PyObject *self) {
 
                         "frag = texture(sampler, st);"
                     "}");
-
-                printf("6.0\n");
 
                 create(&shader.plain, vert_norm, frag_norm);
                 printf("6.1\n");
