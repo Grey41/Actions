@@ -400,7 +400,10 @@ static void create(Program *program, GLuint vert, GLuint frag) {
     glAttachShader(program -> src = glCreateProgram(), vert);
     glAttachShader(program -> src, frag);
     glLinkProgram(program -> src);
+
+    printf("create before\n");
     glUniformBlockBinding(program -> src, glGetUniformBlockIndex(program -> src, "camera"), 0);
+    printf("create after\n");
 
     program -> obj = glGetUniformLocation(program -> src, "object");
     program -> size = glGetUniformLocation(program -> src, "size");
@@ -849,10 +852,16 @@ static int module_exec(PyObject *self) {
                 printf("6\n");
 
                 create(&shader.plain, vert_norm, frag_norm);
+                printf("6.1\n");
+
                 create(&shader.image, vert_img, frag_img);
+                printf("6.2\n");
                 create(&shader.circle, vert_circle, frag_circle);
+                printf("6.3\n");
                 create(&shader.text, vert_img, frag_text);
+                printf("6.4\n");
                 filter(&shader.warp, vert_full, frag_warp);
+                printf("6.5\n");
 
                 glDeleteShader(vert_norm);
                 glDeleteShader(vert_img);
